@@ -30,11 +30,11 @@ if __name__ == '__main__':
             'tools.expires.on'    : True,
             'tools.expires.secs'  : 10 # expire in an hour
         },
-        '/favicon.ico':
-        {
-            'tools.staticfile.on': True,
-            'tools.staticfile.filename': '/static/assets/facebook.ico'
-        }
+        #'/favicon.ico':
+        #{
+        #    'tools.staticfile.on': True,
+        #    'tools.staticfile.filename': '/static/assets/drone.ico'
+        #}
     }
 
     cherrypy.config.update({
