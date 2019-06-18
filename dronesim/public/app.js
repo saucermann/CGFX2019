@@ -42,32 +42,6 @@ var droneObjStr;
 var terrainObjStr;
 var itBoxObjStr;
 
-async function loadAssets() {
-	console.log("Loading assets...");
-	await Promise.all([
-	fetch('./static/shaders/vertex.glsl').then( response => response.text() ).then(function(text) {
-		console.log("Loaded vertex shader.")
-		vs = text;
-	}),
-	fetch('./static/shaders/fragment.glsl').then( response => response.text() ).then(function(text) {
-		console.log("Loaded fragment shader.")
-		fs = text;
-	}),
-	fetch('./static/assets/objects/drone.obj').then( response => response.text() ).then(function(text) {
-		console.log("Loaded drone object.")
-		droneObjStr = text;
-	}),
-	fetch('./static/assets/objects/terrain.obj').then( response => response.text() ).then(function(text) {
-		console.log("Loaded terrain.")
-		terrainObjStr = text;
-	}),
-	fetch('./static/assets/objects/box.obj').then( response => response.text() ).then(function(text) {
-		console.log("Loaded Box.")
-		itBoxObjStr = text;
-	})]);
-	console.log("Done.")
-}
-
 //Parameters for Camera
 var cx = 4.5;
 var cy = 5.0;
@@ -283,39 +257,6 @@ function computeDeltaT(){
 	return deltaT;
 }
 
-/*
-var lastUpdateTime;
-var camVel = [0,0,0];
-var fSk = 500.0;
-var fDk = 2.0 * Math.sqrt(fSk);
-
-// Driving dynamic coefficients
-var sAT = 0.5;
-var mAT = 5.0;
-var ATur = 3.0;
-var ATdr = 5.5;
-var sBT = 1.0;
-var mBT = 3.0;
-var BTur = 5.0;
-var BTdr = 5.5;
-var Tfric = Math.log(0.05);
-var sAS = 0.1;	// Not used yet
-var mAS = 108.0;
-var ASur = 1.0;	// Not used yet
-var ASdr = 0.5;	// Not used yet
-
-var droneLinAccz = 0.0;
-var droneLinVelz = 0.0;
-var droneLinAccy = 0.0;
-var droneLinVely = 0.0;
-var droneLinAccx = 0.0;
-var droneLinVelx = 0.0;
-var preVz = 0;
-var preVy = 0;
-var preVx = 0;
-var droneAngVel = 0.0;
-*/
-
 
 function calculateAcc(v,preV,droneLinAcc,deltaT){
 	v = -v;
@@ -505,6 +446,7 @@ function compileAndLink(program,vs,fs){
 	return program;
 }
 
+
 function linkMeshAttr(program,textureOn){
 	program.vertexPositionAttribute = gl.getAttribLocation(program, "in_pos");
 	gl.enableVertexAttribArray(program.vertexPositionAttribute);
@@ -596,9 +538,34 @@ function initializeWebGL() {
 	}
 }
 
+async function loadAssets() {
+	console.log("Loading assets...");
+	await Promise.all([
+	fetch('./static/shaders/vertex.glsl').then( response => response.text() ).then(function(text) {
+		console.log("Loaded vertex shader.")
+		vs = text;
+	}),
+	fetch('./static/shaders/fragment.glsl').then( response => response.text() ).then(function(text) {
+		console.log("Loaded fragment shader.")
+		fs = text;
+	}),
+	fetch('./static/assets/objects/drone.obj').then( response => response.text() ).then(function(text) {
+		console.log("Loaded drone object.")
+		droneObjStr = text;
+	}),
+	fetch('./static/assets/objects/terrain.obj').then( response => response.text() ).then(function(text) {
+		console.log("Loaded terrain.")
+		terrainObjStr = text;
+	}),
+	fetch('./static/assets/objects/box.obj').then( response => response.text() ).then(function(text) {
+		console.log("Loaded Box.")
+		itBoxObjStr = text;
+	})]);
+	console.log("Done.")
+}
+
 //----------------------------------------MAIN FUNCTION-----------------------------------------
 
-// The real app starts here
 async function main(){
 	setupCanvas();
 	// If assets are not ready, the game cannot start.
