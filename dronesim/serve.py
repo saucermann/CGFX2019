@@ -26,7 +26,9 @@ if __name__ == '__main__':
         },
         '/static': {
             'tools.staticdir.on': True,
-            'tools.staticdir.dir': 'public'
+            'tools.staticdir.dir': 'public',
+            'tools.expires.on'    : True,
+            'tools.expires.secs'  : 10 # expire in an hour
         },
         '/favicon.ico':
         {
