@@ -16,6 +16,36 @@ var projectionMatrix,
 	gLightDir,
 	skyboxWM;
 
+// ASSETS
+
+// Vertex shader
+var vs;
+// Fragment shader
+var fs;
+var droneObjStr;
+var terrainObjStr;
+
+async function loadAssets() {
+	console.log("Loading assets...");
+	await Promise.all([
+	fetch('./static/shaders/vertex.glsl').then( response => response.text() ).then(function(text) {
+		console.log("Loaded vertex shader.")
+		vs = text;
+	}),
+	fetch('./static/shaders/fragment.glsl').then( response => response.text() ).then(function(text) {
+		console.log("Loaded fragment shader.")
+		fs = text;
+	}),
+	fetch('./static/assets/objects/drone.obj').then( response => response.text() ).then(function(text) {
+		console.log("Loaded drone object.")
+		droneObjStr = text;
+	}),
+	fetch('./static/assets/objects/terrain.obj').then( response => response.text() ).then(function(text) {
+		console.log("Loaded terrain.")
+		terrainObjStr = text;
+	})]);
+	console.log("Done.")
+}
 
 //Parameters for Camera
 var cx = 4.5;
@@ -31,7 +61,6 @@ var droneY = 10;
 var droneZ = 0;
 
 var lookRadius = 10.0;
-
 
 var keys = [];
 var vz = 0.0;
@@ -89,7 +118,7 @@ var aspectRatio;
 
 function doResize() {
     // set canvas dimensions
-	var canvas = document.getElementById("my-canvas");
+	var canvas = document.getElementById("drone-sim-canvas");
     if((window.innerWidth > 40) && (window.innerHeight > 240)) {
 		canvas.width  = window.innerWidth-16;
 		canvas.height = window.innerHeight-200;
@@ -103,98 +132,6 @@ function doResize() {
     }
 }
 
-		
-// Vertex shader
-var vs = `#version 300 es
-#define POSITION_LOCATION 0
-#define NORMAL_LOCATION 1
-#define UV_LOCATION 2
-
-layout(location = POSITION_LOCATION) in vec3 in_pos;
-layout(location = NORMAL_LOCATION) in vec3 in_norm;
-
-
-uniform mat4 pMatrix;
-uniform mat4 nMatrix;
-
-out vec3 fs_pos;
-out vec3 fs_norm;
-
-
-void main() {
-	fs_pos = in_pos;
-	fs_norm = (nMatrix * vec4(in_norm, 0.0)).xyz;
-
-	
-	gl_Position = pMatrix * vec4(in_pos, 1.0);
-}`;
-
-// Fragment shader
-var fs = `#version 300 es
-precision highp float;
-
-in vec3 fs_pos;
-in vec3 fs_norm;
-
-
-
-uniform vec4 lightDir;
-//uniform float ambFact;
-
-out vec4 color;
-
-void main() {
-
-	float ambFact = lightDir.w;
-	float dimFact = (1.0-ambFact) * clamp(dot(normalize(fs_norm), lightDir.xyz),0.0,1.0) + ambFact;
-	color = vec4(dimFact,dimFact,dimFact, 1);
-}`;
-
-// Vertex shader
-var vs1 = `#version 300 es
-#define POSITION_LOCATION 0
-#define NORMAL_LOCATION 1
-#define UV_LOCATION 2
-
-layout(location = POSITION_LOCATION) in vec3 in_pos;
-layout(location = NORMAL_LOCATION) in vec3 in_norm;
-layout(location = UV_LOCATION) in vec2 in_uv;
-
-uniform mat4 pMatrix;
-uniform mat4 nMatrix;
-
-out vec3 fs_pos;
-out vec3 fs_norm;
-out vec2 fs_uv;
-
-void main() {
-	fs_pos = in_pos;
-	fs_norm = (nMatrix * vec4(in_norm, 0.0)).xyz;
-	fs_uv = vec2(in_uv.x, 1.0-in_uv.y);
-	
-	gl_Position = pMatrix * vec4(in_pos, 1.0);
-}`;
-
-// Fragment shader
-var fs1 = `#version 300 es
-precision highp float;
-
-in vec3 fs_pos;
-in vec3 fs_norm;
-in vec2 fs_uv;
-
-uniform sampler2D u_texture;
-uniform vec4 lightDir;
-//uniform float ambFact;
-
-out vec4 color;
-
-void main() {
-	vec4 texcol = texture(u_texture, fs_uv);
-	float ambFact = lightDir.w;
-	float dimFact = (1.0-ambFact) * clamp(dot(normalize(fs_norm), lightDir.xyz),0.0,1.0) + ambFact;
-	color = vec4(texcol.rgb * dimFact, texcol.a);
-}`;
 
 // event handler
 
@@ -243,28 +180,14 @@ var textureLoaderCallback = function() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 }
 
-// The real app starts here
-function main(){
-	
-	// setup everything else
-	var canvas = document.getElementById("my-canvas");
-	canvas.addEventListener("mousedown", doMouseDown, false);
-	canvas.addEventListener("mouseup", doMouseUp, false);
-	canvas.addEventListener("mousemove", doMouseMove, false);
-	canvas.addEventListener("mousewheel", doMouseWheel, false);
-	window.addEventListener("keyup", keyFunctionUp, false);
-	window.addEventListener("keydown", keyFunctionDown, false);
-	window.onresize = doResize;
-	canvas.width  = window.innerWidth-16;
-	canvas.height = window.innerHeight-200;
-	
-	try{
+function initializeWebGL() {
+	try {
 		gl= canvas.getContext("webgl2");
-	} catch(e){
+	} catch(e) {
 		console.log(e);
 	}
-	
-	if(gl){
+		
+	if(gl) {
 		// Compile and link shaders
 		program = gl.createProgram();
 		var v1 = gl.createShader(gl.VERTEX_SHADER);
@@ -282,25 +205,7 @@ function main(){
 		gl.attachShader(program, v1);
 		gl.attachShader(program, v2);
 		gl.linkProgram(program);				
-		
-		/*
-		program1 = gl.createProgram();
-		var v11 = gl.createShader(gl.VERTEX_SHADER);
-		gl.shaderSource(v11, vs1);
-		gl.compileShader(v11);
-		if (!gl.getShaderParameter(v11, gl.COMPILE_STATUS)) {
-			alert("ERROR IN VS SHADER : " + gl.getShaderInfoLog(v11));
-		}
-		var v12 = gl.createShader(gl.FRAGMENT_SHADER);
-		gl.shaderSource(v12, fs1)
-		gl.compileShader(v12);		
-		if (!gl.getShaderParameter(v12, gl.COMPILE_STATUS)) {
-			alert("ERROR IN FS SHADER : " + gl.getShaderInfoLog(v12));
-		}			
-		gl.attachShader(program1, v11);
-		gl.attachShader(program1, v12);
-		gl.linkProgram(program1);	*/			
-		
+	
 		gl.useProgram(program);
 
 		// Load mesh using the webgl-obj-loader libraryvar
@@ -368,7 +273,7 @@ function main(){
 		gl.clearColor(0.0, 0.0, 0.0, 1.0);
 		gl.viewport(0.0, 0.0, w, h);
 		
-//		perspectiveMatrix = utils.MakePerspective(60, w/h, 0.1, 1000.0);
+		//perspectiveMatrix = utils.MakePerspective(60, w/h, 0.1, 1000.0);
 		aspectRatio = w/h;
 		
 	 // turn on depth testing
@@ -379,11 +284,34 @@ function main(){
 		gLightDir = [-1.0, 0.0, 0.0, 0.0];
 		skyboxWM = utils.multiplyMatrices(utils.MakeRotateZMatrix(30), utils.MakeRotateYMatrix(135));
 		gLightDir = utils.multiplyMatrixVector(skyboxWM, gLightDir);
-	
-		drawScene();
-	}else{
+	} else {
 		alert("Error: WebGL not supported by your browser!");
 	}
+}
+
+function setupCanvas() {
+// setup everything else
+	console.log("Setting up canvas...")
+	canvas = document.getElementById("drone-sim-canvas");
+	canvas.addEventListener("mousedown", doMouseDown, false);
+	canvas.addEventListener("mouseup", doMouseUp, false);
+	canvas.addEventListener("mousemove", doMouseMove, false);
+	canvas.addEventListener("mousewheel", doMouseWheel, false);
+	window.addEventListener("keyup", keyFunctionUp, false);
+	window.addEventListener("keydown", keyFunctionDown, false);
+	window.onresize = doResize;
+	canvas.width  = window.innerWidth-16;
+	canvas.height = window.innerHeight-200;
+	console.log("Done.")
+}
+
+// The real app starts here
+async function main(){
+	setupCanvas();
+	// If assets are not ready, the game cannot start.
+	await loadAssets();
+	initializeWebGL();
+	drawScene();
 }
 
 var lastUpdateTime;
