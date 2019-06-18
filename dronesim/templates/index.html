@@ -1,22 +1,19 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Funny drone</title>
-        <script src="lib/drone.js"></script>
-        <script src="lib/terrain.js"></script>
-        <script src="lib/texture.js"></script>
-        <script src="lib/webgl-obj-loader.min.js"></script>
-        <script src="lib/quaternion.min.js"></script>
-		<script src="lib/utils.js"></script>
-		<script src="lib/app.js"></script>
+		<title>Drone Simulator</title>
+		<script src="static/lib/quaternion.min.js"></script>
+		<script src="static/lib/utils.js"></script>
+		<script src="static/lib/webgl-obj-loader.min.js"></script>
+		<script src="static/app.js"></script>
 	</head>
 	
 	<body style="background-color: grey;" onLoad="main();">
-		<canvas id="my-canvas" width='800' height='450' style="background-color: white;">
+		<canvas id="drone-sim-canvas" width='800' height='450' style="background-color: white;">
 			Your browser doesn't support the Canvas Element!
 		</canvas>
 		<center>
-			<h1>Use the following keys to move the drone</h1>
+			<h1>Drone Controls</h1>
 			<table border="1">
 			  <tr>
 				<td>&nbsp;</td>

@@ -2,18 +2,18 @@ var utils={
 
 //**** MODEL UTILS
 	// Function to load a 3D model in JSON format
-	get_json: function(url, func) {
+	/*httpGet: function(url) {
 		var xmlHttp = new XMLHttpRequest();
 		xmlHttp.open("GET", url, false); // if true == asynchronous...
 		xmlHttp.onreadystatechange = function() {
 			if (xmlHttp.readyState == 4 && xmlHttp.status==200) {
 				//the file is loaded. Parse it as JSON and launch function
-				func(JSON.parse(xmlHttp.responseText));
+				return xmlHttp.responseText;
 			}
 		};
 		//send the request
 		xmlHttp.send();
-	},
+	},*/
 	
 	//function to convert decimal value of colors 
 	decimalToHex: function(d, padding) {
