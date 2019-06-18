@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Drone Simulator</title>
+		<script src="static/lib/quaternion.min.js"></script>
+		<script src="static/lib/utils.js"></script>
+		<script src="static/lib/webgl-obj-loader.min.js"></script>
+		<script src="static/app.js"></script>
+	</head>
+	
+	<body style="background-color: grey;" onLoad="main();">
+		<canvas id="drone-sim-canvas" width='800' height='450' style="background-color: white;">
+			Your browser doesn't support the Canvas Element!
+		</canvas>
+		<center>
+			<h1>Drone Controls</h1>
+			<table border="1">
+			  <tr>
+				<td>&nbsp;</td>
+				<td>Forward: <B>Up</B> Arrow</td>
+				<td>&nbsp;</td>
+			  </tr>
+			  <tr>
+				<td>Turn left: <B>Left</B> Arrow</td>
+				<td>Reverse: <B>Down</B> Arrow</td>
+				<td>turn right: <B>Right</B> Arrow</td>
+			  </tr>
+			<table/>
+		</center>
+	</body>
+
+</html>

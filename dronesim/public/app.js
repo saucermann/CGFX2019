@@ -32,7 +32,43 @@ var lookRadius = 10.0;
 // Light variables
 var gLightDir;
 
-//Camera variables
+// ASSETS
+
+// Vertex shader
+var vs;
+// Fragment shader
+var fs;
+var droneObjStr;
+var terrainObjStr;
+var itBoxObjStr;
+
+async function loadAssets() {
+	console.log("Loading assets...");
+	await Promise.all([
+	fetch('./static/shaders/vertex.glsl').then( response => response.text() ).then(function(text) {
+		console.log("Loaded vertex shader.")
+		vs = text;
+	}),
+	fetch('./static/shaders/fragment.glsl').then( response => response.text() ).then(function(text) {
+		console.log("Loaded fragment shader.")
+		fs = text;
+	}),
+	fetch('./static/assets/objects/drone.obj').then( response => response.text() ).then(function(text) {
+		console.log("Loaded drone object.")
+		droneObjStr = text;
+	}),
+	fetch('./static/assets/objects/terrain.obj').then( response => response.text() ).then(function(text) {
+		console.log("Loaded terrain.")
+		terrainObjStr = text;
+	}),
+	fetch('./static/assets/objects/box.obj').then( response => response.text() ).then(function(text) {
+		console.log("Loaded Box.")
+		itBoxObjStr = text;
+	})]);
+	console.log("Done.")
+}
+
+//Parameters for Camera
 var cx = 4.5;
 var cy = 5.0;
 var cz = 10.0;
@@ -83,102 +119,8 @@ var ASdr = 0.5;	// Not used yet
 //Time variables
 var lastUpdateTime;
 var deltaT;
-
-//Input output variables
 var keys = [];
 
-//----------------------------------------SHADERS---------------------------------------------------------		
-// Vertex shader without textures
-var vs = `#version 300 es
-#define POSITION_LOCATION 0
-#define NORMAL_LOCATION 1
-#define UV_LOCATION 2
-
-layout(location = POSITION_LOCATION) in vec3 in_pos;
-layout(location = NORMAL_LOCATION) in vec3 in_norm;
-
-
-uniform mat4 pMatrix;
-uniform mat4 nMatrix;
-
-out vec3 fs_pos;
-out vec3 fs_norm;
-
-
-void main() {
-	fs_pos = in_pos;
-	fs_norm = (nMatrix * vec4(in_norm, 0.0)).xyz;
-
-	
-	gl_Position = pMatrix * vec4(in_pos, 1.0);
-}`;
-
-// Fragment shader without textures
-var fs = `#version 300 es
-precision highp float;
-
-in vec3 fs_pos;
-in vec3 fs_norm;
-
-
-
-uniform vec4 lightDir;
-//uniform float ambFact;
-
-out vec4 color;
-
-void main() {
-
-	float ambFact = lightDir.w;
-	float dimFact = (1.0-ambFact) * clamp(dot(normalize(fs_norm), lightDir.xyz),0.0,1.0) + ambFact;
-	color = vec4(dimFact,dimFact,dimFact, 1);
-}`;
-
-// Vertex shader with textures
-var vs1 = `#version 300 es
-#define POSITION_LOCATION 0
-#define NORMAL_LOCATION 1
-#define UV_LOCATION 2
-
-layout(location = POSITION_LOCATION) in vec3 in_pos;
-layout(location = NORMAL_LOCATION) in vec3 in_norm;
-layout(location = UV_LOCATION) in vec2 in_uv;
-
-uniform mat4 pMatrix;
-uniform mat4 nMatrix;
-
-out vec3 fs_pos;
-out vec3 fs_norm;
-out vec2 fs_uv;
-
-void main() {
-	fs_pos = in_pos;
-	fs_norm = (nMatrix * vec4(in_norm, 0.0)).xyz;
-	fs_uv = vec2(in_uv.x, 1.0-in_uv.y);
-	
-	gl_Position = pMatrix * vec4(in_pos, 1.0);
-}`;
-
-// Fragment shader with textures
-var fs1 = `#version 300 es
-precision highp float;
-
-in vec3 fs_pos;
-in vec3 fs_norm;
-in vec2 fs_uv;
-
-uniform sampler2D u_texture;
-uniform vec4 lightDir;
-//uniform float ambFact;
-
-out vec4 color;
-
-void main() {
-	vec4 texcol = texture(u_texture, fs_uv);
-	float ambFact = lightDir.w;
-	float dimFact = (1.0-ambFact) * clamp(dot(normalize(fs_norm), lightDir.xyz),0.0,1.0) + ambFact;
-	color = vec4(texcol.rgb * dimFact, texcol.a);
-}`;
 
 //----------------------------------------INPUT OUTPUT FUNCTIONS-----------------------------------------
 /*
@@ -214,90 +156,107 @@ function doMouseWheel(event) {
 	}
 }
 */
+
+function setupCanvas() {
+// setup everything else
+	console.log("Setting up canvas...")
+	canvas = document.getElementById("drone-sim-canvas");
+	//canvas.addEventListener("mousedown", doMouseDown, false);
+	//canvas.addEventListener("mouseup", doMouseUp, false);
+	//canvas.addEventListener("mousemove", doMouseMove, false);
+	//canvas.addEventListener("mousewheel", doMouseWheel, false);
+	window.addEventListener("keyup", keyFunctionUp, false);
+	window.addEventListener("keydown", keyFunctionDown, false);
+	window.onresize = doResize;
+	canvas.width  = window.innerWidth-16;
+	canvas.height = window.innerHeight-200;
+	console.log("Done.")
+}
+
 var keyFunctionDown =function(e) {
   if(!keys[e.keyCode]) {
   	keys[e.keyCode] = true;
-	switch(e.keyCode) {
-	  case 81:
-//console.log("KeyUp   - Dir LEFT");
-		vx = vx - 1.0;
-		break;
-	  case 69:
-//console.log("KeyUp   - Dir RIGHT");
-		vx = vx + 1.0;
-		break;
-	  case 38:
-//console.log("KeyUp   - Dir forward");
-		vz = vz - 1.0;
-		break;
-	  case 40:
-//console.log("KeyUp   - Dir back");
-		vz = vz + 1.0;
-		break;
-	  case 87:
-//console.log("KeyUp   - Dir UP");
-		vy = vy - 1.0;
-		break;
-	  case 83:
-//console.log("KeyUp   - Dir DOWN");
-		vy = vy + 1.0;
-		break;
-	  case 39:
-//console.log("KeyUp   - Dir rotation LEFT");
-		rvy = rvy - 1.0;
-		break;
-	  case 37:
-//console.log("KeyUp   - Dir rotation RIGHT");
-		rvy = rvy + 1.0;
-		break;
-	}
+		switch(e.keyCode) {
+			case 81:
+			//Dir LEFT
+			vx = vx - 1.0;
+			break;
+			case 69:
+			//Dir RIGHT
+			vx = vx + 1.0;
+			break;
+			case 38:
+			//Dir forward
+			vz = vz - 1.0;
+			break;
+			case 40:
+			//Dir back
+			vz = vz + 1.0;
+			break;
+			case 87:
+			//Dir UP
+			vy = vy - 1.0;
+			break;
+			case 83:
+			//Dir DOWN
+			vy = vy + 1.0;
+			break;
+			case 39:
+			//Dir rotation LEFT
+			rvy = rvy - 1.0;
+			break;
+			case 37:
+			//Dir rotation RIGHT
+			rvy = rvy + 1.0;
+			break;
+		}
   }
 }
 
 var keyFunctionUp =function(e) {
   if(keys[e.keyCode]) {
   	keys[e.keyCode] = false;
-	switch(e.keyCode) {
-	  case 81:
-//console.log("KeyDown  - Dir LEFT");
-		vx = vx + 1.0;
-		break;
-	  case 69:
-//console.log("KeyDown - Dir RIGHT");
-		vx = vx - 1.0;
-		break;
-	  case 38:
-//console.log("KeyDown - Dir forward");
-		vz = vz + 1.0;
-		break;
-	  case 40:
-//console.log("KeyDown - Dir back");
-		vz = vz - 1.0;
-		break;
-	  case 87:
-//console.log("KeyUp   - Dir UP");
-		vy = vy + 1.0;
-		break;
-	  case 83:
-//console.log("KeyUp   - Dir DOWN");
-		vy = vy - 1.0;
-		break;
-	  case 39:
-//console.log("KeyDown  - Dir rotation LEFT");
-		rvy = rvy + 1.0;
-		break;
-	  case 37:
-//console.log("KeyDown - Dir rotation RIGHT");
-		rvy = rvy - 1.0;
-		break;
-	}
+		switch(e.keyCode) {
+			case 81:
+			//KeyDown  - Dir LEFT
+			vx = vx + 1.0;
+			break;
+			case 69:
+			//KeyDown - Dir RIGHT
+			vx = vx - 1.0;
+			break;
+			case 38:
+			//KeyDown - Dir forward
+			vz = vz + 1.0;
+			break;
+			case 40:
+			//KeyDown - Dir back
+			vz = vz - 1.0;
+			break;
+			case 87:
+			//KeyUp   - Dir UP
+			vy = vy + 1.0;
+			break;
+			case 83:
+			//KeyUp   - Dir DOWN
+			vy = vy - 1.0;
+			break;
+			case 39:
+			//KeyDown  - Dir rotation LEFT
+			rvy = rvy + 1.0;
+			break;
+			case 37:
+			//KeyDown - Dir rotation RIGHT
+			rvy = rvy - 1.0;
+			break;
+		}
   }
 }
 
 function doResize() {
-    // set canvas dimensions
+  // set canvas dimensions
 	var canvas = document.getElementById("my-canvas");
-    if((window.innerWidth > 40) && (window.innerHeight > 240)) {
+	if((window.innerWidth > 40) && (window.innerHeight > 240)) {
 		canvas.width  = window.innerWidth-16;
 		canvas.height = window.innerHeight-200;
 		var w=canvas.clientWidth;
@@ -307,64 +266,104 @@ function doResize() {
 		gl.viewport(0.0, 0.0, w, h);
 		
 		aspectRatio = w/h;
-    }
+	}
 }
 
 //----------------------------------------DRAW SUPPORT FUNCTIONS-----------------------------------------
 function computeDeltaT(){
-		var currentTime = (new Date).getTime();
-		if(lastUpdateTime){
-			deltaT = (currentTime - lastUpdateTime) / 1000.0;
-		} else {
-			deltaT = 1/50;
-		}
-		lastUpdateTime = currentTime;
-		return deltaT;
+
+	// compute time interval
+	var currentTime = (new Date).getTime();
+	if(lastUpdateTime){
+		deltaT = (currentTime - lastUpdateTime) / 1000.0;
+	} else {
+		deltaT = 1/50;
+	}
+	lastUpdateTime = currentTime;
+	return deltaT;
 }
+
+/*
+var lastUpdateTime;
+var camVel = [0,0,0];
+var fSk = 500.0;
+var fDk = 2.0 * Math.sqrt(fSk);
+
+// Driving dynamic coefficients
+var sAT = 0.5;
+var mAT = 5.0;
+var ATur = 3.0;
+var ATdr = 5.5;
+var sBT = 1.0;
+var mBT = 3.0;
+var BTur = 5.0;
+var BTdr = 5.5;
+var Tfric = Math.log(0.05);
+var sAS = 0.1;	// Not used yet
+var mAS = 108.0;
+var ASur = 1.0;	// Not used yet
+var ASdr = 0.5;	// Not used yet
+
+var droneLinAccz = 0.0;
+var droneLinVelz = 0.0;
+var droneLinAccy = 0.0;
+var droneLinVely = 0.0;
+var droneLinAccx = 0.0;
+var droneLinVelx = 0.0;
+var preVz = 0;
+var preVy = 0;
+var preVx = 0;
+var droneAngVel = 0.0;
+*/
+
+
 function calculateAcc(v,preV,droneLinAcc,deltaT){
-		v = -v;
-		// = 0.8 * deltaT * 60 * v;
-		if(v > 0.1) {
-		  if(preV > 0.1) {
-			droneLinAcc = droneLinAcc + ATur * deltaT;
-			if(droneLinAcc > mAT) droneLinAcc = mAT;
-		  } else if(droneLinAcc < sAT) droneLinAcc = sAT;
-		} else if(v > -0.1) {
-			droneLinAcc = droneLinAcc - ATdr * deltaT * Math.sign(droneLinAcc);
-			if(Math.abs(droneLinAcc) < 0.001) droneLinAcc = 0.0;
-		} else { 
-		  if(preV < 0.1) {
-			droneLinAcc = droneLinAcc - BTur * deltaT;
-			if(droneLinAcc < -mBT) droneLinAcc = -mBT;
-		  } else if(droneLinAcc > -sBT) droneLinAcc = -sBT;
-		}
-		return droneLinAcc;
+	v = -v;
+	// = 0.8 * deltaT * 60 * v;
+	if(v > 0.1) {
+		if(preV > 0.1) {
+		droneLinAcc = droneLinAcc + ATur * deltaT;
+		if(droneLinAcc > mAT) droneLinAcc = mAT;
+		} else if(droneLinAcc < sAT) droneLinAcc = sAT;
+	} else if(v > -0.1) {
+		droneLinAcc = droneLinAcc - ATdr * deltaT * Math.sign(droneLinAcc);
+		if(Math.abs(droneLinAcc) < 0.001) droneLinAcc = 0.0;
+	} else { 
+		if(preV < 0.1) {
+		droneLinAcc = droneLinAcc - BTur * deltaT;
+		if(droneLinAcc < -mBT) droneLinAcc = -mBT;
+		} else if(droneLinAcc > -sBT) droneLinAcc = -sBT;
+	}
+	return droneLinAcc;
 }
+
+
 function draw(obj,textureOn){
-		gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer);
-		gl.vertexAttribPointer(program.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		gl.bindBuffer(gl.ARRAY_BUFFER, obj.normalBuffer);
-		gl.vertexAttribPointer(program.vertexNormalAttribute, obj.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	    if(textureOn){
-			gl.bindBuffer(gl.ARRAY_BUFFER, obj.textureBuffer);
-			gl.vertexAttribPointer(program.textureCoordAttribute, obj.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		}
-		 
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indexBuffer);		
-
+	gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer);
+	gl.vertexAttribPointer(program.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	gl.bindBuffer(gl.ARRAY_BUFFER, obj.normalBuffer);
+	gl.vertexAttribPointer(program.vertexNormalAttribute, obj.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		if(textureOn){
-			gl.uniform1i(program.textureUniform, 0);
-		}
-		gl.uniform4f(program.lightDir, gLightDir[0], gLightDir[1], gLightDir[2], 0.2);
-		WVPmatrix = utils.multiplyMatrices(projectionMatrix, worldMatrix);
-		gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(WVPmatrix));		
-		gl.uniformMatrix4fv(program.NmatrixUniform, gl.FALSE, utils.transposeMatrix(worldMatrix));
-		gl.drawElements(gl.TRIANGLES, obj.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, obj.textureBuffer);
+		gl.vertexAttribPointer(program.textureCoordAttribute, obj.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	}
+		
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indexBuffer);		
 
+	if(textureOn){
+		gl.uniform1i(program.textureUniform, 0);
+	}
+	gl.uniform4f(program.lightDir, gLightDir[0], gLightDir[1], gLightDir[2], 0.2);
+	WVPmatrix = utils.multiplyMatrices(projectionMatrix, worldMatrix);
+	gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(WVPmatrix));		
+	gl.uniformMatrix4fv(program.NmatrixUniform, gl.FALSE, utils.transposeMatrix(worldMatrix));
+	gl.drawElements(gl.TRIANGLES, obj.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }
+
+
 function drawScene() {
 		// Compute time interval
-		deltaT=computeDeltaT();
+		deltaT = computeDeltaT();
 	
 		//WORLD MATRIX
 		
@@ -390,15 +389,15 @@ function drawScene() {
 
 		//VELOCITIES & ACCELERATIONS UPDATE
 		// x coordinate
-		droneLinAccx=calculateAcc(vx,preVx,droneLinAccx,deltaT);
+		droneLinAccx = calculateAcc(vx, preVx, droneLinAccx, deltaT);
 		preVx = -vx;
 		droneLinVelx = droneLinVelx * Math.exp(Tfric * deltaT) - deltaT * droneLinAccx;
 		// y coordinate
-		droneLinAccy=calculateAcc(vy,preVy,droneLinAccy,deltaT);
+		droneLinAccy = calculateAcc(vy,preVy,droneLinAccy,deltaT);
 		preVy = -vy;
 		droneLinVely = droneLinVely * Math.exp(Tfric * deltaT) - deltaT * droneLinAccy;
 		// z coordinate
-		droneLinAccz=calculateAcc(vz,preVz,droneLinAccz,deltaT);
+		droneLinAccz = calculateAcc(vz,preVz,droneLinAccz,deltaT);
 		preVz = -vz;
 		droneLinVelz = droneLinVelz * Math.exp(Tfric * deltaT) - deltaT * droneLinAccz;
 		// y angle
@@ -478,80 +477,70 @@ var textureLoaderCallback = function() {
 	gl.bindTexture(gl.TEXTURE_2D, textureId);		
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);		
 // set the filtering so we don't need mips
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 }
 
 //----------------------------------------GL FUNCTIONS-----------------------------------------------
+
 function compileAndLink(program,vs,fs){
-		program = gl.createProgram();
-		var v1 = gl.createShader(gl.VERTEX_SHADER);
-		gl.shaderSource(v1, vs);
-		gl.compileShader(v1);
-		if (!gl.getShaderParameter(v1, gl.COMPILE_STATUS)) {
-			alert("ERROR IN VS SHADER : " + gl.getShaderInfoLog(v1));
-		}
-		var v2 = gl.createShader(gl.FRAGMENT_SHADER);
-		gl.shaderSource(v2, fs)
-		gl.compileShader(v2);		
-		if (!gl.getShaderParameter(v2, gl.COMPILE_STATUS)) {
-			alert("ERROR IN FS SHADER : " + gl.getShaderInfoLog(v2));
-		}			
-		gl.attachShader(program, v1);
-		gl.attachShader(program, v2);
-		gl.linkProgram(program);
-		return program;
+	program = gl.createProgram();
+	var v1 = gl.createShader(gl.VERTEX_SHADER);
+	gl.shaderSource(v1, vs);
+	gl.compileShader(v1);
+	if (!gl.getShaderParameter(v1, gl.COMPILE_STATUS)) {
+		alert("ERROR IN VS SHADER : " + gl.getShaderInfoLog(v1));
+	}
+	var v2 = gl.createShader(gl.FRAGMENT_SHADER);
+	gl.shaderSource(v2, fs)
+	gl.compileShader(v2);		
+	if (!gl.getShaderParameter(v2, gl.COMPILE_STATUS)) {
+		alert("ERROR IN FS SHADER : " + gl.getShaderInfoLog(v2));
+	}			
+	gl.attachShader(program, v1);
+	gl.attachShader(program, v2);
+	gl.linkProgram(program);
+	return program;
 }
+
 function linkMeshAttr(program,textureOn){
-		program.vertexPositionAttribute = gl.getAttribLocation(program, "in_pos");
-		gl.enableVertexAttribArray(program.vertexPositionAttribute);
-		 
-		program.vertexNormalAttribute = gl.getAttribLocation(program, "in_norm");
-		gl.enableVertexAttribArray(program.vertexNormalAttribute);
-		 
-		if(textureOn){
-			program.textureCoordAttribute = gl.getAttribLocation(program, "in_uv");
-			gl.enableVertexAttribArray(program.textureCoordAttribute);
-		}
+	program.vertexPositionAttribute = gl.getAttribLocation(program, "in_pos");
+	gl.enableVertexAttribArray(program.vertexPositionAttribute);
+		
+	program.vertexNormalAttribute = gl.getAttribLocation(program, "in_norm");
+	gl.enableVertexAttribArray(program.vertexNormalAttribute);
+		
+	if(textureOn){
+		program.textureCoordAttribute = gl.getAttribLocation(program, "in_uv");
+		gl.enableVertexAttribArray(program.textureCoordAttribute);
+	}
 
-		program.WVPmatrixUniform = gl.getUniformLocation(program, "pMatrix");
-		program.NmatrixUniform = gl.getUniformLocation(program, "nMatrix");
-		if(textureOn){
-			program.textureUniform = gl.getUniformLocation(program, "u_texture");
-		}
-		program.lightDir = gl.getUniformLocation(program, "lightDir");
-		if(textureOn){
-			program.ambFact = gl.getUniformLocation(program, "ambFact");
-		}
-		return program;
+	program.WVPmatrixUniform = gl.getUniformLocation(program, "pMatrix");
+	program.NmatrixUniform = gl.getUniformLocation(program, "nMatrix");
+	if(textureOn){
+		program.textureUniform = gl.getUniformLocation(program, "u_texture");
+	}
+	program.lightDir = gl.getUniformLocation(program, "lightDir");
+	if(textureOn){
+		program.ambFact = gl.getUniformLocation(program, "ambFact");
+	}
+	return program;
 }
 
-//----------------------------------------MAIN FUNCTION-----------------------------------------
-function main(){
-	
-	var canvas = document.getElementById("my-canvas");
-	/*canvas.addEventListener("mousedown", doMouseDown, false);
-	canvas.addEventListener("mouseup", doMouseUp, false);
-	canvas.addEventListener("mousemove", doMouseMove, false);
-	canvas.addEventListener("mousewheel", doMouseWheel, false);*/
-	window.addEventListener("keyup", keyFunctionUp, false);
-	window.addEventListener("keydown", keyFunctionDown, false);
-	window.onresize = doResize;
-	canvas.width  = window.innerWidth-16;
-	canvas.height = window.innerHeight-200;
-	
-	try{
-		gl= canvas.getContext("webgl2");
-	} catch(e){
+
+function initializeWebGL() {
+	try {
+		gl = canvas.getContext("webgl2");
+	} catch(e) {
 		console.log(e);
 	}
-	
-	if(gl){
-		// Compiling and linking shaders without texture
-		program=compileAndLink(program,vs,fs);				
 		
+	if(gl) {
+		// Compiling and linking shaders without texture
+		program = compileAndLink(program,vs,fs);				
+	
 		// Compiling and linking shaders with texture
 		//program1=compileAndLink(program1,vs1,fs1);		
 		
@@ -596,15 +585,24 @@ function main(){
 		aspectRatio = canvas.clientWidth/canvas.clientHeight;
 		
 		// Turn on depth testing
-	    gl.enable(gl.DEPTH_TEST);
+			gl.enable(gl.DEPTH_TEST);
 
 		// Environment initialization
 		gLightDir = [-1.0, 0.0, 0.0, 0.0];
 		skyboxWM = utils.multiplyMatrices(utils.MakeRotateZMatrix(30), utils.MakeRotateYMatrix(135));
 		gLightDir = utils.multiplyMatrixVector(skyboxWM, gLightDir);
-	
-		drawScene();
-	}else{
+	} else {
 		alert("Error: WebGL not supported by your browser!");
 	}
+}
+
+//----------------------------------------MAIN FUNCTION-----------------------------------------
+
+// The real app starts here
+async function main(){
+	setupCanvas();
+	// If assets are not ready, the game cannot start.
+	await loadAssets();
+	initializeWebGL();
+	drawScene();
 }
