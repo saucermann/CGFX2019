@@ -15,6 +15,8 @@ var utils={
 		xmlHttp.send();
 	},*/
 	
+	
+
 	//function to convert decimal value of colors 
 	decimalToHex: function(d, padding) {
 		var hex = Number(d).toString(16);
@@ -27,6 +29,9 @@ var utils={
 		return hex;
 	},
 	
+	load: async function(path) {
+		return fetch(path).then( response => response.text() );
+	},
 	
 	
 	
@@ -236,19 +241,28 @@ var utils={
 		return out;        
 	},
 	normalizeVector3: function(v){
-       /* cross product of vectors [u] and  [v] */
-        var len = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+    /* cross product of vectors [u] and  [v] */
+    var len = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
 		var out = [v[0]/len, v[1]/len, v[2]/len];  
 		
 		return out;        
 	},
 	
+	sumVector: function(u, v) {
+		var out = [];
+		for (var i=0; i <= u.length; i++) {
+			out[i] = u[i] + v[i];
+		}
+		return out;
+	},
 	
-	
-	
-	
-	
-	
+	vectorPerScalar: function(vec, a) {
+		var out = [];
+		for (var i=0; i<=vec.length; i++) {
+			out[i] = vec[i]*a;
+		}
+		return out;
+	},
 	
 //*** MODEL MATRIX OPERATIONS
 
