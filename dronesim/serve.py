@@ -22,7 +22,7 @@ if __name__ == '__main__':
     conf = {
         '/': {
             'tools.sessions.on': True,
-            'tools.staticdir.root': os.path.abspath(os.getcwd())
+            'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__))
         },
         '/static': {
             'tools.staticdir.on': True,
