@@ -61,7 +61,7 @@ async function loadAssets() {
 	await Promise.all([
 		utils.load('./static/shaders/vertex.glsl').then(text => vs = text),
 		utils.load('./static/shaders/fragment.glsl').then(text => fs = text),
-		utils.load('./static/assets/objects/drone.obj').then( text => droneObjStr = text),
+		utils.load('./static/assets/objects/Hely1.obj').then( text => droneObjStr = text),
 		utils.load('./static/assets/objects/terrain.obj').then( text => terrainObjStr = text),
 		utils.load('./static/assets/objects/box.obj').then( text => hitBoxObjStr = text)
 	]);
@@ -126,26 +126,26 @@ function computeDeltaT(){
  * @param {boolean} textureOn
  */
 function draw(obj, textureOn) {
+
+	// WARNING: UNIFORMS SHOULD BE MOVED OUT OF THIS FUNCTION!
+	// Also: buffers have already been enabled in linkMeshAttr...
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.vertexBuffer);
 	gl.vertexAttribPointer(program.vertexPositionAttribute, obj.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.normalBuffer);
 	gl.vertexAttribPointer(program.vertexNormalAttribute, obj.mesh.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-	if(textureOn) {
-		gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.textureBuffer);
-		gl.vertexAttribPointer(program.textureCoordAttribute, obj.mesh.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	}
+	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.textureBuffer);
+	gl.vertexAttribPointer(program.textureCoordAttribute, obj.mesh.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.mesh.indexBuffer);
 
-	if(textureOn){
-		gl.uniform1i(program.textureUniform, 0);
-	}
+	gl.uniform1i(program.textureUniform, imgtx);
 
 	gl.uniform4f(program.lightDir, gLightDir[0], gLightDir[1], gLightDir[2], 0.2);
 	WVPmatrix = utils.multiplyMatrices(camera.projectionMatrix, obj.worldMatrix);
 	gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(WVPmatrix));
 	gl.uniformMatrix4fv(program.NmatrixUniform, gl.FALSE, utils.transposeMatrix(obj.worldMatrix));
+	gl.uniform1f(program.ambFact, 0.1);
+	
 	gl.drawElements(gl.TRIANGLES, obj.mesh.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }
 
@@ -167,12 +167,12 @@ function drawScene() {
 
 
 //----------------------------------------TEXTURE FUNCTIONS-----------------------------------------
-var textureLoaderCallback = function() {
-	var textureId = gl.createTexture();
-	gl.activeTexture(gl.TEXTURE0 + this.txNum);
-	gl.bindTexture(gl.TEXTURE_2D, textureId);
+function textureLoaderCallback() {
+	var texture = gl.createTexture();
+	//gl.activeTexture(gl.TEXTURE0 + this.txNum);
+	gl.bindTexture(gl.TEXTURE_2D, texture);
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
-// set the filtering so we don't need mips
+	// set the filtering so we don't need mips
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
@@ -202,32 +202,27 @@ function compileAndLink(program,vs,fs){
 }
 
 
-function linkMeshAttr(program, textureOn){
+function linkMeshAttr(program){
+	// Enable and assign to program buffers for vertex position, normals and UV 
+	// coordinates of texture
 	program.vertexPositionAttribute = gl.getAttribLocation(program, "in_pos");
 	gl.enableVertexAttribArray(program.vertexPositionAttribute);
-
 	program.vertexNormalAttribute = gl.getAttribLocation(program, "in_norm");
 	gl.enableVertexAttribArray(program.vertexNormalAttribute);
+	program.textureCoordAttribute = gl.getAttribLocation(program, "in_uv");
+	gl.enableVertexAttribArray(program.textureCoordAttribute);
 
-	if(textureOn) {
-		program.textureCoordAttribute = gl.getAttribLocation(program, "in_uv");
-		gl.enableVertexAttribArray(program.textureCoordAttribute);
-	}
-
+	// Associate uniforms to program
 	program.WVPmatrixUniform = gl.getUniformLocation(program, "pMatrix");
 	program.NmatrixUniform = gl.getUniformLocation(program, "nMatrix");
-	if(textureOn){
-		program.textureUniform = gl.getUniformLocation(program, "u_texture");
-	}
+	program.textureUniform = gl.getUniformLocation(program, "u_texture");
 	program.lightDir = gl.getUniformLocation(program, "lightDir");
-	if(textureOn){
-		program.ambFact = gl.getUniformLocation(program, "ambFact");
-	}
+	program.ambFact = gl.getUniformLocation(program, "ambFact");
 	return program;
 }
 
 function prepareChunks(objects,worldMatrices){
-	chunkMng= new ChunkManager(objects, worldMatrices,NUMOFCHUNKS);
+	chunkMng = new ChunkManager(objects, worldMatrices,NUMOFCHUNKS);
 }
 
 function initializeWebGL() {
@@ -254,12 +249,14 @@ function initializeWebGL() {
 
 		// Create the textures
 
-		/*imgtx = new Image();
-		imgtx.txNum = 0;
+		imgtx = new Image();
+		//associates an id to a texture and passes it to opengl
+		//i disabled it for now
+		//imgtx.txNum = 0;
 		imgtx.onload = textureLoaderCallback;
-		imgtx.src = droneTextureData;
+		imgtx.src = "static/assets/textures/drone.png";
 
-		skyboxLattx = new Image();
+		/*skyboxLattx = new Image();
 		skyboxLattx.txNum = 1;
 		skyboxLattx.onload = textureLoaderCallback;
 		skyboxLattx.src = TrackTextureData;*/
@@ -302,6 +299,8 @@ async function main(){
 
 	camera = new Camera({
 		'target': drone,
+		'targetDistance': [0, 2, -3, 1],
+		'farPlane': 300
 	});
 
 	prepareChunks([terrain.mesh],[terrain.worldMatrix]);

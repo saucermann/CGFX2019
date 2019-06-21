@@ -3,17 +3,17 @@ precision highp float;
 
 in vec3 fs_pos;
 in vec3 fs_norm;
-//in vec2 fs_uv;
-//uniform sampler2D u_texture;
+in vec2 fs_uv;
+uniform sampler2D u_texture;
 uniform vec4 lightDir;
-//uniform float ambFact;
+uniform float ambFact;
 
 out vec4 color;
 
 void main() {
-	//vec4 texcol = texture(u_texture, fs_uv);
-	float ambFact = lightDir.w;
+	vec4 texcol = texture(u_texture, fs_uv);
+	//float ambFact = lightDir.w;
 	float dimFact = (1.0-ambFact) * clamp(dot(normalize(fs_norm), lightDir.xyz),0.0,1.0) + ambFact;
-	//color = vec4(texcol.rgb * dimFact, texcol.a);
-   	color = vec4(dimFact,dimFact,dimFact, 1);
+	color = vec4(texcol.rgb * dimFact, texcol.a);
+   	//color = vec4(dimFact,dimFact,dimFact, 1);
 }
