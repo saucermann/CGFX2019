@@ -1,4 +1,4 @@
-const NUMOFCHUNKS = 30;
+const NUMOFCHUNKS = 4096;
 
 class ChunkManager{
   verticesArray = [];
@@ -6,13 +6,14 @@ class ChunkManager{
   maxVert;
   lengthMap;
   widthMap;
-  numOfChunks;
+  realNumOfChunks;
   numCPerRow;
   lengthChunk;
   widthChunk;
   chunks = [];
+  greenChunks = [];
 
-  constructor(staticObjects,worldMatrices,numOfChunks){
+  constructor(staticObjects,worldMatrices,desiredChunks){
     var objInd, vertInd, chunkInd,
         tmpVert = [],
         vertNum;
@@ -26,21 +27,22 @@ class ChunkManager{
 
     }
     this.verticesArray.sort(this.compareVertecesXZ);
-    this.numOfChunks = numOfChunks;
+    this.numCPerRow = Math.ceil(Math.sqrt(desiredChunks));
+    this.realNumOfChunks = this.numCPerRow*this.numCPerRow;
     this.setLengthWidth();
-    for(chunkInd=0; chunkInd<this.numCPerRow*this.numCPerRow; chunkInd++){
+    for(chunkInd=0; chunkInd<this.realNumOfChunks; chunkInd++){
       this.addChunk(chunkInd);
     }
   }
 
   compareVertecesXZ(a, b) {
-    if (a[0]<b[0]) {
+    if (a[X]<b[X]) {
       return -1;
-    }else if(a[0]>b[0]){
+    }else if(a[X]>b[X]){
       return 1;
-    }else if(a[2]<b[2]){
+    }else if(a[Z]<b[Z]){
       return -1;
-    }else if(a[2]>b[2]){
+    }else if(a[Z]>b[Z]){
       return 1;
     }else{
       return 0;
@@ -50,9 +52,8 @@ class ChunkManager{
   setLengthWidth(){
     this.minVert = this.verticesArray[0];
     this.maxVert = this.verticesArray[this.verticesArray.length-1];
-    this.lengthMap = this.verticesArray[this.verticesArray.length-1][0] -  this.verticesArray[0][0];
-    this.widthMap = this.verticesArray[this.verticesArray.length-1][2] -  this.verticesArray[0][2];
-    this.numCPerRow = Math.ceil(Math.sqrt(this.numOfChunks));
+    this.lengthMap = this.verticesArray[this.verticesArray.length-1][X] -  this.verticesArray[0][X];
+    this.widthMap = this.verticesArray[this.verticesArray.length-1][Z] -  this.verticesArray[0][Z];
     this.lengthChunk = this.lengthMap / this.numCPerRow;
     this.widthChunk = this.widthMap / this.numCPerRow;
   }
@@ -61,16 +62,77 @@ class ChunkManager{
     var row = Math.floor(ind / this.numCPerRow);
     var col = ind % this.numCPerRow;
     var bounds =[];
-    bounds[0] = [this.minVert[0] + row*this.lengthChunk, this.minVert[2] + col*this.widthChunk];
-    bounds[1] = [this.minVert[0] + (row+1)*this.lengthChunk, this.minVert[2] + col*this.widthChunk];
-    bounds[2] = [this.minVert[0] + row*this.lengthChunk, this.minVert[2] + (col+1)*this.widthChunk];
-    bounds[3] = [this.minVert[0] + (row+1)*this.lengthChunk, this.minVert[2] + (col+1)*this.widthChunk];
+    bounds[0] = [this.minVert[X] + row*this.lengthChunk, this.minVert[Z] + col*this.widthChunk];
+    bounds[1] = [this.minVert[X] + (row+1)*this.lengthChunk, this.minVert[Z] + col*this.widthChunk];
+    bounds[2] = [this.minVert[X] + row*this.lengthChunk, this.minVert[Z] + (col+1)*this.widthChunk];
+    bounds[3] = [this.minVert[X] + (row+1)*this.lengthChunk, this.minVert[Z] + (col+1)*this.widthChunk];
     this.chunks[ind] = new Chunk(ind,bounds);
     this.chunks[ind].addInternals(this.verticesArray);
   }
-  checkCollision(itbox,worldMatrix){
-    //var boxVert = utils.multiplyMatrixVector(worldMatrix,itbox.verticesArray);
+  dycotomicSearch(e,start,end){
+    var midId = start+Math.floor((end-start)/2);
+    var midChunk = this.chunks[midId];
 
+    if(e[X]<midChunk.bounds[0][0]){
+      return this.dycotomicSearch(e,start,midId);
+    }else if(e[X]>midChunk.bounds[1][0]){
+      return this.dycotomicSearch(e,midId,end);
+    }else if(e[Z]<midChunk.bounds[0][1]){
+      return this.dycotomicSearch(e,start,midId);
+    }else if(e[Z]>=midChunk.bounds[2][1]){
+      return this.dycotomicSearch(e,midId,end);
+    }else{
+      return midChunk.idChunk;
+    }
+  }
+
+  circularIndex(ind,base){
+    return (ind+base)%base;
+  }
+
+  checkNear(e,prevChunks){
+    var chunkIndP, chunkIndN;
+    var nears;
+    for(chunkIndP=0; chunkIndP<prevChunks.length; chunkIndP++){
+      nears = [prevChunks[chunkIndP],this.circularIndex(prevChunks[chunkIndP]+1,this.realNumOfChunks),this.circularIndex(prevChunks[chunkIndP]-1,this.realNumOfChunks),
+               this.circularIndex(prevChunks[chunkIndP]+this.numCPerRow,this.realNumOfChunks),this.circularIndex(prevChunks[chunkIndP]+this.numCPerRow+1,this.realNumOfChunks),this.circularIndex(prevChunks[chunkIndP]+this.numCPerRow-1,this.realNumOfChunks),
+               this.circularIndex(prevChunks[chunkIndP]-this.numCPerRow,this.realNumOfChunks),this.circularIndex(prevChunks[chunkIndP]-this.numCPerRow+1,this.realNumOfChunks),this.circularIndex(prevChunks[chunkIndP]-this.numCPerRow-1,this.realNumOfChunks),];
+      for(chunkIndN=0; chunkIndN<nears.length; chunkIndN++){
+        if(this.chunks[nears[chunkIndN]].belongChunk(e)){
+          return nears[chunkIndN];
+        }
+      }
+    }
+    return this.dycotomicSearch(e,0,this.realNumOfChunks-1);
+  }
+
+  checkCollision(obj){
+    var greenChunksOld = [];
+    var objBounds = obj.getHitBoxUpToDate();
+    var vertInd, chunkInd;
+    var greenInternals, internal;
+    while(this.greenChunks.length){
+      greenChunksOld.push(this.greenChunks.pop());
+    }
+    for(vertInd=0; vertInd<objBounds.length/2; vertInd++){
+      if(greenChunksOld.length){
+          this.greenChunks.push(this.checkNear(objBounds[vertInd],greenChunksOld));
+      }else{
+        this.greenChunks.push(this.dycotomicSearch(objBounds[vertInd],0,this.realNumOfChunks-1));
+      }
+    }
+
+    for(chunkInd=0; chunkInd<this.greenChunks.length; chunkInd++){
+      greenInternals = this.chunks[this.greenChunks[chunkInd]].internals;
+      for(vertInd=0; vertInd<greenInternals.length; vertInd++){
+        internal = greenInternals[vertInd];
+        if((internal[X]>objBounds[0][X] & internal[X]<objBounds[2][X] & internal[Y]>objBounds[0][Y] & internal[Y]<objBounds[4][Y]
+          & internal[Z]>objBounds[0][Z] & internal[Z]<objBounds[1][Z]) ||  internal[Y]>objBounds[0][Y]){
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
 }

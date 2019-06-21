@@ -8,7 +8,7 @@ var gl = null,
 
 // Object variables
 var droneMesh = null,
-	itBoxMesh = null,
+	hitBoxMesh = null,
 	terrainMesh = null;
 var chunkMng;
 
@@ -42,7 +42,7 @@ var vs;
 var fs;
 var droneObjStr;
 var terrainObjStr;
-var itBoxObjStr;
+var hitBoxObjStr;
 
 //Time variables
 var lastUpdateTime;
@@ -63,7 +63,7 @@ async function loadAssets() {
 		utils.load('./static/shaders/fragment.glsl').then(text => fs = text),
 		utils.load('./static/assets/objects/drone.obj').then( text => droneObjStr = text),
 		utils.load('./static/assets/objects/terrain.obj').then( text => terrainObjStr = text),
-		utils.load('./static/assets/objects/box.obj').then( text => itBoxObjStr = text)
+		utils.load('./static/assets/objects/box.obj').then( text => hitBoxObjStr = text)
 	]);
 	console.log("Done.")
 }
@@ -245,11 +245,11 @@ function initializeWebGL() {
 		// Load mesh using the webgl-obj-loader libraryvar
 
 		droneMesh = new OBJ.Mesh(droneObjStr);
-		itBoxMesh = new OBJ.Mesh(itBoxObjStr);
+		hitBoxMesh = new OBJ.Mesh(hitBoxObjStr);
 		terrainMesh = new OBJ.Mesh(terrainObjStr);
 		//skybox = new OBJ.Mesh(trackNfieldObjStr);
 		OBJ.initMeshBuffers(gl, droneMesh);
-		OBJ.initMeshBuffers(gl, itBoxMesh);
+		OBJ.initMeshBuffers(gl, hitBoxMesh);
 		OBJ.initMeshBuffers(gl, terrainMesh);
 
 		// Create the textures

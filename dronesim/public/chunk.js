@@ -11,10 +11,14 @@ class Chunk{
     }
   }
 
+  belongChunk(v){
+    return v[X]>=this.bounds[0][0] & v[X]<this.bounds[1][0] & v[Z]>=this.bounds[0][1] & v[Z]<this.bounds[2][1];
+  }
+
   addInternals(vertices){
     var i;
     for(i=0; i<vertices.length; i++){
-      if(vertices[i][0]>=this.bounds[0][0] & vertices[i][0]<this.bounds[1][0] & vertices[i][2]>=this.bounds[0][1] & vertices[i][2]<this.bounds[2][1]){
+      if(this.belongChunk(vertices[i])){
         this.internals[this.internals.length] = vertices[i];
       }
     }
