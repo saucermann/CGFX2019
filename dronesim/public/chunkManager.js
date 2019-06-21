@@ -111,6 +111,12 @@ class ChunkManager{
     var objBounds = obj.getHitBoxUpToDate();
     var vertInd, chunkInd;
     var greenInternals, internal;
+    for(vertInd=0; vertInd<objBounds.length/2; vertInd++){
+      if(objBounds[vertInd][X]<this.minVert[X] || objBounds[vertInd][Z]<this.minVert[Z] ||
+         objBounds[vertInd][X]>this.maxVert[X] || objBounds[vertInd][Z]>this.maxVert[Z]){
+           return true;
+      }
+    }
     while(this.greenChunks.length){
       greenChunksOld.push(this.greenChunks.pop());
     }
