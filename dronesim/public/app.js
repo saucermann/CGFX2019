@@ -299,7 +299,7 @@ async function main(){
 
 	camera = new Camera({
 		'target': drone,
-		'targetDistance': [0, 2, -3, 1],
+		'targetDistance': [0, 0.5, -3, 1],
 		'farPlane': 300
 	});
 
