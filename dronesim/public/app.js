@@ -113,19 +113,19 @@ function draw(obj) {
 	// Also: buffers have already been enabled in linkMeshAttr...
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.vertexBuffer);
 	gl.vertexAttribPointer(
-		program.vertexPositionAttribute, obj.mesh.vertexBuffer.itemSize, 
+		program.vertexPositionAttribute, obj.mesh.vertexBuffer.itemSize,
 		gl.FLOAT, false, 0, 0
 	);
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.normalBuffer);
 	gl.vertexAttribPointer(
-		program.vertexNormalAttribute, obj.mesh.normalBuffer.itemSize, 
+		program.vertexNormalAttribute, obj.mesh.normalBuffer.itemSize,
 		gl.FLOAT, false, 0, 0
 	);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.mesh.indexBuffer);
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.textureBuffer);
 	gl.vertexAttribPointer(
-		program.textureCoordAttribute, obj.mesh.textureBuffer.itemSize, 
+		program.textureCoordAttribute, obj.mesh.textureBuffer.itemSize,
 		gl.FLOAT, false, 0, 0
 	);
 	gl.uniform1i(program.textureUniform, obj.texture.id);
@@ -136,7 +136,7 @@ function draw(obj) {
 	gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(WVPmatrix));
 	gl.uniformMatrix4fv(program.NmatrixUniform, gl.FALSE, utils.transposeMatrix(obj.worldMatrix));
 	gl.uniform1f(program.ambFact, 0.1);
-	
+
 	gl.drawElements(gl.TRIANGLES, obj.mesh.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }
 
@@ -159,9 +159,9 @@ function drawScene() {
 
 /**
  * Compiles and links the shaders to the program
- * @param {*} program 
- * @param {*} vs 
- * @param {*} fs 
+ * @param {*} program
+ * @param {*} vs
+ * @param {*} fs
  */
 function compileAndLink(program,vs,fs){
 	program = gl.createProgram();
@@ -186,10 +186,10 @@ function compileAndLink(program,vs,fs){
 
 /**
  * Extracts and assigns to global program all the shader variables.
- * @param {*} program 
+ * @param {*} program
  */
 function linkMeshAttr(program){
-	// Enable and assign to program buffers for vertex position, normals and UV 
+	// Enable and assign to program buffers for vertex position, normals and UV
 	// coordinates of texture
 	program.vertexPositionAttribute = gl.getAttribLocation(program, "in_pos");
 	gl.enableVertexAttribArray(program.vertexPositionAttribute);
@@ -209,7 +209,7 @@ function linkMeshAttr(program){
 
 /**
  * Checks collisions of the drone with each object in the array
- * @param {Array} objects 
+ * @param {Array} objects
  */
 function prepareChunks(objects) {
 	chunkMng = new ChunkManager(objects.map(v => v.mesh), objects.map(v => v.worldMatrix), NUMOFCHUNKS);
@@ -256,7 +256,8 @@ async function main(){
 	drone = new Drone({
 		'pos': [0, 20, 0],
 		'mesh': new OBJ.Mesh(droneObj),
-		'texture': new Texture('static/assets/textures/drone.png')
+		'texture': new Texture('static/assets/textures/drone.png'),
+		'collisionOn': true
 	});
 
 	var terrain = new Terrain({

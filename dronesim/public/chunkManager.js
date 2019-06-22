@@ -106,9 +106,9 @@ class ChunkManager{
     return this.dycotomicSearch(e,0,this.realNumOfChunks-1);
   }
 
-  checkCollision(obj){
+  checkCollision(obj,futureMatrix){
     var greenChunksOld = [];
-    var objBounds = obj.getHitBoxUpToDate();
+    var objBounds = obj.getHitBoxUpToDate(futureMatrix);
     var vertInd, chunkInd;
     var greenInternals, internal;
     for(vertInd=0; vertInd<objBounds.length/2; vertInd++){
