@@ -33,18 +33,12 @@ var utils={
 		return fetch(path).then( response => response.text() );
 	},
 	
-	
-	
-	
-	
 //*** SHADERS UTILS	
 	/*Function to load a shader's code, compile it and return the handle to it
 	Requires:
 		path to the shader's text (url)
 
-	*/
-	
- 
+	*/ 
 	loadFile: function (url, data, callback, errorCallback) {
 		// Set up an synchronous request! Important!
 		var request = new XMLHttpRequest();
@@ -475,4 +469,9 @@ var utils={
 
 		return out;
 	},
+
+	applyTransform: function(matrices) {
+		return matrices.reduce((x,y) => this.multiplyMatrices(x, y));
+	}
+	
 }

@@ -1,4 +1,3 @@
-//----------------------------------------VARIABLE DECLARATION-----------------------------------------
 // Canvas
 var canvas;
 
@@ -6,27 +5,12 @@ var canvas;
 var gl = null,
 	program = null;
 
-// Object variables
-var droneMesh = null,
-	hitBoxMesh = null,
-	terrainMesh = null;
 var chunkMng;
-
-// Textures variables
-var	imgtx = null;
 
 // Drawing environment variables
 var	skybox = null,
 	skyboxLattx = null,
 	skyboxTbtx = null;
-
-// Projection variables
-var worldMatrix,
-	viewMatrix,
-	projectionMatrix,
-	perspectiveMatrix,
-	skyboxWM,
-	worldMatrixTerrain;
 
 var aspectRatio;
 var lookRadius = 10.0;
@@ -40,9 +24,9 @@ var gLightDir;
 var vs;
 // Fragment shader
 var fs;
-var droneObjStr;
-var terrainObjStr;
-var hitBoxObjStr;
+var droneObj;
+var terrainObj;
+var hitBoxObj;
 
 //Time variables
 var lastUpdateTime;
@@ -61,9 +45,9 @@ async function loadAssets() {
 	await Promise.all([
 		utils.load('./static/shaders/vertex.glsl').then(text => vs = text),
 		utils.load('./static/shaders/fragment.glsl').then(text => fs = text),
-		utils.load('./static/assets/objects/Hely1.obj').then( text => droneObjStr = text),
-		utils.load('./static/assets/objects/terrain.obj').then( text => terrainObjStr = text),
-		utils.load('./static/assets/objects/box.obj').then( text => hitBoxObjStr = text)
+		utils.load('./static/assets/objects/Hely1.obj').then( text => droneObj = text),
+		utils.load('./static/assets/objects/terrain.obj').then( text => terrainObj = text),
+		utils.load('./static/assets/objects/box.obj').then( text => hitBoxObj = text)
 	]);
 	console.log("Done.")
 }
@@ -123,22 +107,29 @@ function computeDeltaT(){
 /**
  * Draws an object as seen on the camera. If textureOn, it draws the object with its texture.
  * @param {Array} obj
- * @param {boolean} textureOn
  */
-function draw(obj, textureOn) {
-
+function draw(obj) {
 	// WARNING: UNIFORMS SHOULD BE MOVED OUT OF THIS FUNCTION!
 	// Also: buffers have already been enabled in linkMeshAttr...
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.vertexBuffer);
-	gl.vertexAttribPointer(program.vertexPositionAttribute, obj.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	gl.vertexAttribPointer(
+		program.vertexPositionAttribute, obj.mesh.vertexBuffer.itemSize, 
+		gl.FLOAT, false, 0, 0
+	);
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.normalBuffer);
-	gl.vertexAttribPointer(program.vertexNormalAttribute, obj.mesh.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.textureBuffer);
-	gl.vertexAttribPointer(program.textureCoordAttribute, obj.mesh.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
+	gl.vertexAttribPointer(
+		program.vertexNormalAttribute, obj.mesh.normalBuffer.itemSize, 
+		gl.FLOAT, false, 0, 0
+	);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.mesh.indexBuffer);
 
-	gl.uniform1i(program.textureUniform, imgtx);
+	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.textureBuffer);
+	gl.vertexAttribPointer(
+		program.textureCoordAttribute, obj.mesh.textureBuffer.itemSize, 
+		gl.FLOAT, false, 0, 0
+	);
+	gl.uniform1i(program.textureUniform, obj.texture.id);
+
 
 	gl.uniform4f(program.lightDir, gLightDir[0], gLightDir[1], gLightDir[2], 0.2);
 	WVPmatrix = utils.multiplyMatrices(camera.projectionMatrix, obj.worldMatrix);
@@ -161,26 +152,17 @@ function drawScene() {
 	//computing world matrix
 	gameObjects.forEach( v => v.update() );
 	camera.update();
-	gameObjects.forEach( v => draw(v, false));
+	gameObjects.forEach( v => draw(v));
 	window.requestAnimationFrame(drawScene);
 }
 
 
-//----------------------------------------TEXTURE FUNCTIONS-----------------------------------------
-function textureLoaderCallback() {
-	var texture = gl.createTexture();
-	//gl.activeTexture(gl.TEXTURE0 + this.txNum);
-	gl.bindTexture(gl.TEXTURE_2D, texture);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
-	// set the filtering so we don't need mips
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-}
-
-
-//----------------------------------------GL FUNCTIONS-----------------------------------------------
+/**
+ * Compiles and links the shaders to the program
+ * @param {*} program 
+ * @param {*} vs 
+ * @param {*} fs 
+ */
 function compileAndLink(program,vs,fs){
 	program = gl.createProgram();
 	var v1 = gl.createShader(gl.VERTEX_SHADER);
@@ -202,6 +184,10 @@ function compileAndLink(program,vs,fs){
 }
 
 
+/**
+ * Extracts and assigns to global program all the shader variables.
+ * @param {*} program 
+ */
 function linkMeshAttr(program){
 	// Enable and assign to program buffers for vertex position, normals and UV 
 	// coordinates of texture
@@ -221,10 +207,19 @@ function linkMeshAttr(program){
 	return program;
 }
 
-function prepareChunks(objects,worldMatrices){
-	chunkMng = new ChunkManager(objects, worldMatrices,NUMOFCHUNKS);
+/**
+ * Checks collisions of the drone with each object in the array
+ * @param {Array} objects 
+ */
+function prepareChunks(objects) {
+	chunkMng = new ChunkManager(objects.map(v => v.mesh), objects.map(v => v.worldMatrix), NUMOFCHUNKS);
 }
 
+
+/**
+ * Initializes global gl program, compiles global fragment and vertex shaders,
+ * sets the viewport to the canvas dimensions and enables depth testing.
+ */
 function initializeWebGL() {
 	try {
 		gl = canvas.getContext("webgl2");
@@ -233,38 +228,8 @@ function initializeWebGL() {
 	}
 
 	if(gl) {
-		// Compiling and linking shaders without texture
 		program = compileAndLink(program,vs,fs);
 		gl.useProgram(program);
-
-		// Load mesh using the webgl-obj-loader libraryvar
-
-		droneMesh = new OBJ.Mesh(droneObjStr);
-		hitBoxMesh = new OBJ.Mesh(hitBoxObjStr);
-		terrainMesh = new OBJ.Mesh(terrainObjStr);
-		//skybox = new OBJ.Mesh(trackNfieldObjStr);
-		OBJ.initMeshBuffers(gl, droneMesh);
-		OBJ.initMeshBuffers(gl, hitBoxMesh);
-		OBJ.initMeshBuffers(gl, terrainMesh);
-
-		// Create the textures
-
-		imgtx = new Image();
-		//associates an id to a texture and passes it to opengl
-		//i disabled it for now
-		//imgtx.txNum = 0;
-		imgtx.onload = textureLoaderCallback;
-		imgtx.src = "static/assets/textures/drone.png";
-
-		/*skyboxLattx = new Image();
-		skyboxLattx.txNum = 1;
-		skyboxLattx.onload = textureLoaderCallback;
-		skyboxLattx.src = TrackTextureData;*/
-
-		/*skyboxTbtx = new Image();
-		skyboxTbtx.txNum = 2;
-		skyboxTbtx.onload = textureLoaderCallback;
-		skyboxTbtx.src = FieldTextureData;*/
 
 		// Link mesh attributes to shader attributes and enable them
 		program = linkMeshAttr(program,false);
@@ -289,12 +254,14 @@ async function main(){
 	initializeWebGL();
 
 	drone = new Drone({
-		'pos': [110, 54, 41],
-		'mesh': droneMesh,
+		'pos': [0, 20, 0],
+		'mesh': new OBJ.Mesh(droneObj),
+		'texture': new Texture('static/assets/textures/drone.png')
 	});
 
 	var terrain = new Terrain({
-		'mesh': terrainMesh
+		'mesh': new OBJ.Mesh(terrainObj),
+		'texture': new Texture('static/assets/textures/park.jpg')
 	});
 
 	camera = new Camera({
@@ -303,9 +270,8 @@ async function main(){
 		'farPlane': 300
 	});
 
-	prepareChunks([terrain.mesh],[terrain.worldMatrix]);
 	gameObjects.push(drone, terrain);
-
+	prepareChunks([terrain]);
 	// Environment initialization
 	gLightDir = [-1.0, 0.0, 0.0, 0.0];
 	skyboxWM = utils.multiplyMatrices(utils.MakeRotateZMatrix(30), utils.MakeRotateYMatrix(135));

@@ -29,12 +29,14 @@ class Drone {
     worldMatrix = [];
     newWorldMatrix = [];
     mesh = null;
-    MinX;
-    MaxX;
-    MinY;
-    MaxY;
-    MinZ;
-    MaxZ;
+    texture = null;
+
+    MinX = 0.0;
+    MaxX = 0.0;
+    MinY = 0.0;
+    MaxY = 0.0;
+    MinZ = 0.0;
+    MaxZ = 0.0;
     hitBox = [];
 
     /**
@@ -43,13 +45,13 @@ class Drone {
      */
     constructor(obj) {
         this.pos = obj.pos ? obj.pos : [0, 10, 0];
-        this.worldMatrix = utils.MakeTranslateMatrix(this.pos[X],this.pos[Y],this.pos[Z]);
-        this.newWorldMatrix = utils.MakeTranslateMatrix(this.pos[X],this.pos[Y],this.pos[Z]);
-        if(obj.mesh){
-          this.mesh = obj.mesh;
+        this.texture = obj.texture ? obj.texture : null;
+        this.worldMatrix = utils.MakeTranslateMatrix(...this.pos);
+        this.newWorldMatrix = utils.MakeTranslateMatrix(...this.pos);
+        this.mesh = obj.mesh ? obj.mesh : null
+        if(this.mesh) {
+          OBJ.initMeshBuffers(gl, this.mesh);
           this.setHitBox();
-        }else{
-          this.mesh = obj.mesh;
         }
     }
 
