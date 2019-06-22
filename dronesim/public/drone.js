@@ -47,7 +47,7 @@ class Drone {
         this.texture = obj.texture ? obj.texture : null;
         this.worldMatrix = utils.MakeTranslateMatrix(...this.pos);
         this.mesh = obj.mesh ? obj.mesh : null;
-        this.collisionOn = obj.collisionOn ? obj.collisionOn : true;
+        this.collisionOn = obj.collisionOn;
         if(this.mesh) {
           OBJ.initMeshBuffers(gl, this.mesh);
           this.setHitBox();
