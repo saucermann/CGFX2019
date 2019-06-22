@@ -26,7 +26,7 @@ var vs;
 var fs;
 var droneObj;
 var terrainObj;
-var hitBoxObj;
+var skyBoxObj;
 
 //Time variables
 var lastUpdateTime;
@@ -47,7 +47,7 @@ async function loadAssets() {
 		utils.load('./static/shaders/fragment.glsl').then(text => fs = text),
 		utils.load('./static/assets/objects/Hely1.obj').then( text => droneObj = text),
 		utils.load('./static/assets/objects/terrain.obj').then( text => terrainObj = text),
-		utils.load('./static/assets/objects/box.obj').then( text => hitBoxObj = text)
+		utils.load('./static/assets/objects/skyBox.obj').then( text => skyBoxObj = text)
 	]);
 	console.log("Done.")
 }
@@ -265,18 +265,23 @@ async function main(){
 		'texture': new Texture('static/assets/textures/park.jpg')
 	});
 
+	var skyBox = new SkyBox({
+		'mesh': new OBJ.Mesh(skyBoxObj),
+		'texture': new Texture('static/assets/textures/sky.jpg'),
+		'parent': drone
+	});
+
 	camera = new Camera({
 		'target': drone,
 		'targetDistance': [0, 0.5, -3, 1],
 		'farPlane': 300
 	});
 
-	gameObjects.push(drone, terrain);
+	gameObjects.push(drone, terrain, skyBox);
 	prepareChunks([terrain]);
 	// Environment initialization
 	gLightDir = [-1.0, 0.0, 0.0, 0.0];
-	skyboxWM = utils.multiplyMatrices(utils.MakeRotateZMatrix(30), utils.MakeRotateYMatrix(135));
-	gLightDir = utils.multiplyMatrixVector(skyboxWM, gLightDir);
+	gLightDir = utils.multiplyMatrixVector(utils.multiplyMatrices(utils.MakeRotateZMatrix(30), utils.MakeRotateYMatrix(135)), gLightDir);
 
 	drawScene();
 }

@@ -11,7 +11,7 @@ class Terrain {
 
     /**
      * Constructor of Terrain class.
-     * @param {*} obj 
+     * @param {*} obj
      */
     constructor(obj) {
         this.mesh = obj.mesh;
@@ -22,6 +22,6 @@ class Terrain {
     }
 
     update() {
-       // do nothing 
+       // do nothing
     }
 }

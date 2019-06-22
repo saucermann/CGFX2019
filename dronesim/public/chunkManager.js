@@ -1,4 +1,5 @@
 const NUMOFCHUNKS = 4096;
+const MAXHIGH = 60;
 
 class ChunkManager{
   verticesArray = [];
@@ -113,7 +114,8 @@ class ChunkManager{
     var greenInternals, internal;
     for(vertInd=0; vertInd<objBounds.length/2; vertInd++){
       if(objBounds[vertInd][X]<this.minVert[X] || objBounds[vertInd][Z]<this.minVert[Z] ||
-         objBounds[vertInd][X]>this.maxVert[X] || objBounds[vertInd][Z]>this.maxVert[Z]){
+         objBounds[vertInd][X]>this.maxVert[X] || objBounds[vertInd][Z]>this.maxVert[Z] ||
+         objBounds[vertInd][Y]>MAXHIGH){
            return true;
       }
     }
@@ -132,8 +134,8 @@ class ChunkManager{
       greenInternals = this.chunks[this.greenChunks[chunkInd]].internals;
       for(vertInd=0; vertInd<greenInternals.length; vertInd++){
         internal = greenInternals[vertInd];
-        if((internal[X]>objBounds[0][X] & internal[X]<objBounds[2][X] & internal[Y]>objBounds[0][Y] & internal[Y]<objBounds[4][Y]
-          & internal[Z]>objBounds[0][Z] & internal[Z]<objBounds[1][Z]) ||  internal[Y]>objBounds[0][Y]){
+        if((internal[X]>objBounds[0][X] && internal[X]<objBounds[2][X] && internal[Y]>objBounds[0][Y] && internal[Y]<objBounds[4][Y]
+          && internal[Z]>objBounds[0][Z] && internal[Z]<objBounds[1][Z]) || internal[Y]>objBounds[0][Y]){
           return true;
         }
       }
