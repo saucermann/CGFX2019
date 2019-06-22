@@ -121,17 +121,16 @@ function draw(obj) {
 		program.vertexNormalAttribute, obj.mesh.normalBuffer.itemSize,
 		gl.FLOAT, false, 0, 0
 	);
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.mesh.indexBuffer);
-
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.textureBuffer);
 	gl.vertexAttribPointer(
 		program.textureCoordAttribute, obj.mesh.textureBuffer.itemSize,
 		gl.FLOAT, false, 0, 0
 	);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.mesh.indexBuffer);
 	gl.uniform1i(program.textureUniform, obj.texture.id);
 
-
-	gl.uniform4f(program.lightDir, gLightDir[0], gLightDir[1], gLightDir[2], 0.2);
+	let transformedLightDir = utils.normalizeVector3(utils.multiplyMatrix3Vector3(utils.invertMatrix(obj.worldMatrix), gLightDir));
+	gl.uniform4f(program.lightDir, transformedLightDir[0], transformedLightDir[1], transformedLightDir[2], 0.2);
 	WVPmatrix = utils.multiplyMatrices(camera.projectionMatrix, obj.worldMatrix);
 	gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(WVPmatrix));
 	gl.uniformMatrix4fv(program.NmatrixUniform, gl.FALSE, utils.transposeMatrix(obj.worldMatrix));
@@ -241,6 +240,7 @@ function initializeWebGL() {
 
 		// Turn on depth testing
 		gl.enable(gl.DEPTH_TEST);
+		gl.enable(gl.CULL_FACE);
 	} else {
 		alert("Error: WebGL not supported by your browser!");
 	}
