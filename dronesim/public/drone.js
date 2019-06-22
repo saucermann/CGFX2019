@@ -27,7 +27,6 @@ class Drone {
     //ASdr = 0.5;
 
     worldMatrix = [];
-    newWorldMatrix = [];
     mesh = null;
     texture = null;
 
@@ -47,8 +46,8 @@ class Drone {
         this.pos = obj.pos ? obj.pos : [0, 10, 0];
         this.texture = obj.texture ? obj.texture : null;
         this.worldMatrix = utils.MakeTranslateMatrix(...this.pos);
-        this.newWorldMatrix = utils.MakeTranslateMatrix(...this.pos);
-        this.mesh = obj.mesh ? obj.mesh : null
+        this.mesh = obj.mesh ? obj.mesh : null;
+        this.collisionOn = obj.collisionOn ? obj.collisionOn : true;
         if(this.mesh) {
           OBJ.initMeshBuffers(gl, this.mesh);
           this.setHitBox();
@@ -87,15 +86,15 @@ class Drone {
                      [this.MaxX,this.MaxY,this.MinZ,1],[this.MaxX,this.MaxY,this.MaxZ,1]];
     }
 
-    getHitBoxUpToDate(){
-      return [utils.multiplyMatrixVector(this.newWorldMatrix,this.hitBox[0]),
-              utils.multiplyMatrixVector(this.newWorldMatrix,this.hitBox[1]),
-              utils.multiplyMatrixVector(this.newWorldMatrix,this.hitBox[2]),
-              utils.multiplyMatrixVector(this.newWorldMatrix,this.hitBox[3]),
-              utils.multiplyMatrixVector(this.newWorldMatrix,this.hitBox[4]),
-              utils.multiplyMatrixVector(this.newWorldMatrix,this.hitBox[5]),
-              utils.multiplyMatrixVector(this.newWorldMatrix,this.hitBox[6]),
-              utils.multiplyMatrixVector(this.newWorldMatrix,this.hitBox[7])];
+    getHitBoxUpToDate(futureWorldMatrix){
+      return [utils.multiplyMatrixVector(futureWorldMatrix,this.hitBox[0]),
+              utils.multiplyMatrixVector(futureWorldMatrix,this.hitBox[1]),
+              utils.multiplyMatrixVector(futureWorldMatrix,this.hitBox[2]),
+              utils.multiplyMatrixVector(futureWorldMatrix,this.hitBox[3]),
+              utils.multiplyMatrixVector(futureWorldMatrix,this.hitBox[4]),
+              utils.multiplyMatrixVector(futureWorldMatrix,this.hitBox[5]),
+              utils.multiplyMatrixVector(futureWorldMatrix,this.hitBox[6]),
+              utils.multiplyMatrixVector(futureWorldMatrix,this.hitBox[7])];
     }
 
     /**
@@ -136,7 +135,10 @@ class Drone {
         // update world matrix
         //WORLD MATRIX
         //translation of (droneX,droneY,droneZ)
-    this.worldMatrix = this.newWorldMatrix;
+        let translationMatrix = utils.MakeTranslateMatrix(this.pos[X],this.pos[Y],this.pos[Z]);
+    		//rotation of droneRotation around the y axis
+        let rotationMatrix = utils.MakeRotateYMatrix(this.angle);
+    this.worldMatrix = utils.multiplyMatrices(translationMatrix, rotationMatrix);
     var newPos = [this.pos[X],this.pos[Y],this.pos[Z]];
     var newAngle = this.angle;
     // 3 is hardcoded since velocity, position, acceleration are expressed by 3 coordinates
@@ -193,14 +195,11 @@ class Drone {
 			//angle     = psi/Math.PI*180;
 			newAngle  = psi/Math.PI*180;
     }
-    let newTranslationMatrix = utils.MakeTranslateMatrix(newPos[0],newPos[1],newPos[2]);
+    let futureTranslationMatrix = utils.MakeTranslateMatrix(newPos[0],newPos[1],newPos[2]);
 		//rotation of droneRotation around the y axis
-    let newRotationMatrix = utils.MakeRotateYMatrix(newAngle);
-    this.newWorldMatrix = utils.multiplyMatrices(newTranslationMatrix, newRotationMatrix);
-    if(!(chunkMng.checkCollision(this))){
-      this.pos = [newPos[X],newPos[Y],newPos[Z]];
-      this.angle = newAngle;
-    }else{
+    let futureRotationMatrix = utils.MakeRotateYMatrix(newAngle);
+    let futureWorldMatrix = utils.multiplyMatrices(futureTranslationMatrix, futureRotationMatrix);
+    if(this.collisionOn && chunkMng.checkCollision(this,futureWorldMatrix)){
       for(var i=0; i<3; i++) {
           this.linAcc[i] = -this.linAcc[i]/4;
           this.prevVel[i] = this.vel[i]/4;
@@ -208,6 +207,9 @@ class Drone {
       }
 
       this.angVel = -this.angVel
+    }else{
+      this.pos = [newPos[X],newPos[Y],newPos[Z]];
+      this.angle = newAngle;
     }
   }
 
