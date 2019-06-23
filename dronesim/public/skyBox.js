@@ -1,21 +1,14 @@
-class SkyBox {
-    mesh = null;
-    texture = null;
+class SkyBox extends WorldObject {
     parent = null;
-
     worldMatrix = utils.MakeScaleMatrix(160);
 
     /**
-     * Constructor of Terrain class.
+     * Constructor of SkyBox class.
      * @param {*} obj
      */
     constructor(obj) {
-        this.mesh = obj.mesh;
-        this.texture = obj.texture ? obj.texture : null;
+        super(obj);
         this.parent = obj.parent ? obj.parent : null;
-        if(this.mesh) {
-            OBJ.initMeshBuffers(gl, this.mesh);
-        }
     }
 
     update() {

@@ -1,6 +1,4 @@
-class Terrain {
-    mesh = null;
-    texture = null;
+class Terrain extends WorldObject {
 
     worldMatrix = utils.applyTransform([
         utils.MakeTranslateMatrix(-200, -80, 600),
@@ -14,14 +12,6 @@ class Terrain {
      * @param {*} obj
      */
     constructor(obj) {
-        this.mesh = obj.mesh;
-        this.texture = obj.texture ? obj.texture : null
-        if(this.mesh) {
-            OBJ.initMeshBuffers(gl, this.mesh);
-        }
-    }
-
-    update() {
-       // do nothing
+        super(obj);
     }
 }

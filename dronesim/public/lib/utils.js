@@ -85,15 +85,6 @@ var utils={
 		}
 	},
 
-
-
-
-
-
-
-
-
-
 //*** MATH LIBRARY
 
 	degToRad: function(angle){

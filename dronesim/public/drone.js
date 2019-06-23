@@ -1,4 +1,4 @@
-class Drone {
+class Drone extends WorldObject {
 
     //Drone movement variables
     pos = null;
@@ -27,8 +27,6 @@ class Drone {
     //ASdr = 0.5;
 
     worldMatrix = [];
-    mesh = null;
-    texture = null;
 
     MinX = 0.0;
     MaxX = 0.0;
@@ -43,15 +41,11 @@ class Drone {
      * @param {*} obj
      */
     constructor(obj) {
+        super(obj);
         this.pos = obj.pos ? obj.pos : [0, 10, 0];
-        this.texture = obj.texture ? obj.texture : null;
         this.worldMatrix = utils.MakeTranslateMatrix(...this.pos);
-        this.mesh = obj.mesh ? obj.mesh : null;
         this.collisionOn = obj.collisionOn;
-        if(this.mesh) {
-          OBJ.initMeshBuffers(gl, this.mesh);
-          this.setHitBox();
-        }
+        this.setHitBox();
     }
 
     updateVel(component, amount) {
@@ -136,32 +130,32 @@ class Drone {
         //WORLD MATRIX
         //translation of (droneX,droneY,droneZ)
         let translationMatrix = utils.MakeTranslateMatrix(this.pos[X],this.pos[Y],this.pos[Z]);
-    		//rotation of droneRotation around the y axis
+            //rotation of droneRotation around the y axis
         let rotationMatrix = utils.MakeRotateYMatrix(this.angle);
-    this.worldMatrix = utils.multiplyMatrices(translationMatrix, rotationMatrix);
-    var newPos = [this.pos[X],this.pos[Y],this.pos[Z]];
-    var newAngle = this.angle;
-    // 3 is hardcoded since velocity, position, acceleration are expressed by 3 coordinates
-    // for each coordinate update its value
-    for(var i=0; i<3; i++) {
-        this.linAcc[i] = this.__calculateAcc(this.vel[i], this.prevVel[i], this.linAcc[i], deltaT);
-        this.prevVel[i] = -this.vel[i];
-        this.linVel[i] = this.linVel[i] * Math.exp(this.tFriction * deltaT) - deltaT * this.linAcc[i];
-    }
+        this.worldMatrix = utils.applyTransform([translationMatrix, rotationMatrix]);
+        var newPos = [this.pos[X],this.pos[Y],this.pos[Z]];
+        var newAngle = this.angle;
+        // 3 is hardcoded since velocity, position, acceleration are expressed by 3 coordinates
+        // for each coordinate update its value
+        for(var i=0; i<3; i++) {
+            this.linAcc[i] = this.__calculateAcc(this.vel[i], this.prevVel[i], this.linAcc[i], deltaT);
+            this.prevVel[i] = -this.vel[i];
+            this.linVel[i] = this.linVel[i] * Math.exp(this.tFriction * deltaT) - deltaT * this.linAcc[i];
+        }
 
-    // POSITION UPDATE
-    var delta = utils.multiplyMatrixVector(
-        this.worldMatrix,
-        [this.linVel[0], this.linVel[1], this.linVel[2], 0.0]
-    );
+        // POSITION UPDATE
+        var delta = utils.multiplyMatrixVector(
+            this.worldMatrix,
+            [this.linVel[0], this.linVel[1], this.linVel[2], 0.0]
+        );
 
 
-    for(let i=0; i<this.pos.length; i++) {
-        newPos[i] -= delta[i];
-    }
+        for(let i=0; i<this.pos.length; i++) {
+            newPos[i] -= delta[i];
+        }
 
-		// ROTATION UPDATE
-    this.angVel = this.mAS * deltaT * this.rvy;
+            // ROTATION UPDATE
+        this.angVel = this.mAS * deltaT * this.rvy;
 		let xaxis = [this.worldMatrix[0],this.worldMatrix[4],this.worldMatrix[8]];
 		let yaxis = [this.worldMatrix[1],this.worldMatrix[5],this.worldMatrix[9]];
 		let zaxis = [this.worldMatrix[2],this.worldMatrix[6],this.worldMatrix[10]];

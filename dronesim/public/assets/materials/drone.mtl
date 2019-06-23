@@ -1,12 +1,13 @@
-# Blender MTL File: 'drone.blend'
-# Material Count: 1
-
-newmtl material
+newmtl Hely
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
-Kd 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
+Kd 0.640000 0.640000 0.640000
+Ks 0.527027 0.527027 0.527027
 Ke 0.000000 0.000000 0.000000
-Ni -1.000000
+Ni 1.000000
 d 1.000000
 illum 2
+map_Kd D:/BGE_BOT/Neu/textures/Hely_Nor_2.png
+map_Bump D:/BGE_BOT/Neu/textures/Hely_Nor_2.png
+map_Ks D:/BGE_BOT/Neu/textures/Hely_col.png
+refl D:/BGE_BOT/Neu/textures/spot_light_2.jpg
