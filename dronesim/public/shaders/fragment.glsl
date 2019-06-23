@@ -25,6 +25,42 @@ uniform float 		tex_factor;
 
 out vec4 color;
 
+/*struct PointLight {    
+    vec3 position;
+    
+    float constant;
+    float linear;
+    float quadratic;  
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};  
+
+uniform PointLight pointLights[NR_POINT_LIGHTS];
+
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
+    vec3 light_direction = normalize(light.position - fragPos);
+    // diffuse shading
+    float diff = max(dot(normal, light_direction), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-light_direction, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    // attenuation
+    float distance    = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + 
+  			     light.quadratic * (distance * distance));    
+    // combine results
+    vec3 ambient  = light.ambient  * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse  = light.diffuse  * diff * vec3(texture(material.diffuse, TexCoords));
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+} 
+*/
 
 float lambert_diffuse(vec3 normal_vector, vec3 light_direction) {
 	return clamp(dot(normalize(fs_norm), light_direction),0.0,1.0);
@@ -42,6 +78,7 @@ void main() {
 	vec4 diff_color;
 	vec4 amb_color;
 	vec4 emit;
+	
 	if(has_texture) {
 		vec4 tex_color = texture(u_texture, fs_uv);
 		diff_color = diffuse_color * (1.0-tex_factor) + tex_color * tex_factor;
@@ -59,4 +96,5 @@ void main() {
 	vec4 specular = blinn_specular(normal_vector, light_direction, eye_direction)*light_color*specular_color;
 
 	color = clamp(ambient + diffuse + specular + emit, 0.0, 1.0);
+
 }
