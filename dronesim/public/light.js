@@ -20,13 +20,15 @@ class DirectionalLight extends Light {
 
 class PointLight extends Light {
     pos = null;
-    g = null;
+    target = null;
     decay = null;
 
     constructor(obj) {
         super(obj);
         this.pos = obj.pos ? obj.pos : null;
         this.decay = obj.decay ? obj.decay : null;
-        this.g = obj.g ? obj.g : null;        
+        this.target = obj.target ? obj.target : null;        
     }
 }
+
+class AmbientLight extends Light {}

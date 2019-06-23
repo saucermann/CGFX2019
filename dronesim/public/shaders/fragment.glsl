@@ -1,100 +1,109 @@
 #version 300 es
-#define NR_POINT_LIGHTS 4  
+#define MAX_POINT_LIGHTS 4  
+
+// This fragment shader works with a finite number of point lights,
+// a single direct light and an ambient light color.
 
 precision highp float;
+
+struct PointLight {    
+    vec3 position;
+	float decay;
+	vec4 color;
+	float target;
+};
+
+struct DirectLight {
+	vec3 direction;
+	vec4 color;
+};
+
+struct Material {
+	vec4 diffuse;
+	vec4 ambient;
+	vec4 specular;
+	vec4 emit;
+	float shine;
+};
 
 in vec3 fs_pos;
 in vec3 fs_norm;
 in vec2 fs_uv;
 
 uniform sampler2D 	u_texture;
-
-uniform vec3 		eye_pos;
-
-uniform vec3 		light_direction;
-uniform vec4 		light_color;
-uniform vec4 		ambient_light_color;
-
-uniform bool 		has_texture;
-uniform vec4 		specular_color;
-uniform vec4 		diffuse_color;
-uniform vec4 		emit_color;
-uniform vec4 		ambient_color;
-uniform float 		specular_shine;
-uniform float 		tex_factor;
+uniform vec3 		u_eye_pos;
+uniform vec4 		u_amb_light;
+uniform bool 		u_has_texture;
+uniform float 		u_tex_factor;
+uniform int 		u_pl_length;
+uniform Material	u_mat;
+uniform DirectLight u_dir_light;
+uniform PointLight 	u_point_lights[MAX_POINT_LIGHTS];
 
 out vec4 color;
 
-/*struct PointLight {    
-    vec3 position;
-    
-    float constant;
-    float linear;
-    float quadratic;  
+vec3 normal;
+vec3 eye_dir;	
+vec4 diffuse_color;
+vec4 ambient_color;
+vec4 emit_color;
 
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-};  
-
-uniform PointLight pointLights[NR_POINT_LIGHTS];
-
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
-{
-    vec3 light_direction = normalize(light.position - fragPos);
-    // diffuse shading
-    float diff = max(dot(normal, light_direction), 0.0);
-    // specular shading
-    vec3 reflectDir = reflect(-light_direction, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    // attenuation
-    float distance    = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance + 
-  			     light.quadratic * (distance * distance));    
-    // combine results
-    vec3 ambient  = light.ambient  * vec3(texture(material.diffuse, TexCoords));
-    vec3 diffuse  = light.diffuse  * diff * vec3(texture(material.diffuse, TexCoords));
-    vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
-    ambient  *= attenuation;
-    diffuse  *= attenuation;
-    specular *= attenuation;
-    return (ambient + diffuse + specular);
-} 
-*/
-
-float lambert_diffuse(vec3 normal_vector, vec3 light_direction) {
-	return clamp(dot(normalize(fs_norm), light_direction),0.0,1.0);
+float lambert_diffuse(vec3 light_direction) {
+	return clamp(dot(normal, light_direction),0.0,1.0);
 }
 
-float blinn_specular(vec3 normal_vector, vec3 light_direction, vec3 eye_direction) {
-	vec3 half_vector = normalize(light_direction + eye_direction);
-	float blinn_specular = pow(clamp(dot(normal_vector, half_vector), 0.0, 1.0), specular_shine);
-	return blinn_specular;
+float blinn_specular(vec3 light_direction) {
+	vec3 half_vector = normalize(light_direction + eye_dir);
+	return pow(clamp(dot(normal, half_vector), 0.0, 1.0), u_mat.shine);
+}
+
+vec4 calc_point_light(PointLight light) {
+	vec3 direction = normalize(light.position - fs_pos);
+	float attenuation = pow(light.target/length(light.position-fs_pos), light.decay);
+	vec4 diffuse = lambert_diffuse(direction)*diffuse_color;
+	vec4 specular = blinn_specular(direction)*u_mat.specular;
+	vec4 color = light.color * attenuation;
+	return clamp(color*(diffuse+specular), 0.0, 1.0);
+} 
+
+vec4 calc_directional_light() {
+	vec4 diffuse = lambert_diffuse(u_dir_light.direction)*diffuse_color;
+	vec4 specular = blinn_specular(u_dir_light.direction)*u_mat.specular;
+	vec4 color = u_dir_light.color*(specular + diffuse);
+	return clamp(color, 0.0, 1.0);
 }
 
 void main() {
-	vec3 normal_vector = normalize(fs_norm);
-	vec3 eye_direction = normalize(eye_pos - fs_pos);
-	vec4 diff_color;
-	vec4 amb_color;
-	vec4 emit;
-	
-	if(has_texture) {
+	normal = normalize(fs_norm);
+	eye_dir = normalize(u_eye_pos - fs_pos);
+
+	// If the object has texture rendering on, then overwrite values for diffuse, ambient and
+	// emit, and consider a certain "percentage" of texture color.
+	if(u_has_texture) {
 		vec4 tex_color = texture(u_texture, fs_uv);
-		diff_color = diffuse_color * (1.0-tex_factor) + tex_color * tex_factor;
-		amb_color = ambient_color * (1.0-tex_factor) + tex_color * tex_factor;
-		emit = emit_color * (1.0-tex_factor) +
-					tex_color * tex_factor * max(max(emit_color.r, emit_color.g), emit_color.b);
+		diffuse_color = u_mat.diffuse * (1.0-u_tex_factor) + tex_color * u_tex_factor;
+		ambient_color = u_mat.ambient * (1.0-u_tex_factor) + tex_color * u_tex_factor;
+		emit_color = u_mat.emit * (1.0-u_tex_factor) +
+					tex_color * u_tex_factor * max(max(u_mat.emit.r, u_mat.emit.g), 
+					u_mat.emit.b);
 	} else {
-		diff_color = diffuse_color;
-		amb_color = ambient_color;
-		emit = emit_color;
+		diffuse_color = u_mat.diffuse;
+		ambient_color = u_mat.ambient;
+		emit_color = u_mat.emit;
 	}
 
-	vec4 diffuse = lambert_diffuse(normal_vector, light_direction)*light_color*diff_color;
-	vec4 ambient = ambient_color * ambient_light_color;
-	vec4 specular = blinn_specular(normal_vector, light_direction, eye_direction)*light_color*specular_color;
+	// Evaluate ambient light contribution.
+	vec4 ambient = ambient_color * u_amb_light;
 
-	color = clamp(ambient + diffuse + specular + emit, 0.0, 1.0);
+	// Evaluate directional light impact
+	vec4 dir_light_contrib = calc_directional_light();
 
+	// Evaluate point lights contribution
+	vec4 point_lights_contrib = vec4(0.0, 0.0, 0.0, 0.0);
+
+	for (int i = 0; i < u_pl_length; i++) {
+		point_lights_contrib += calc_point_light(u_point_lights[i]);
+	}
+
+	color = clamp(dir_light_contrib + point_lights_contrib + ambient + emit_color, 0.0, 1.0);
 }

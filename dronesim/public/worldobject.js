@@ -1,5 +1,16 @@
 class WorldObject {
 
+    // CAREFUL NED, CAREFUL NOW! 
+    // The "update" function in each class breaks the initialization,
+    // because does not calculate the world matrix for each frame
+    // taking into account the previous one.
+    // Therefore, just set "staticPos", "staticRotation", "staticScale"
+    // when you're sure that the object won't move
+    // (This is obviously a momentary solution)
+    staticPos = null;
+    staticRotation = null;
+    staticScale = null;
+    
     // Material properties
     diffuseColor = null;
 	emitColor = null;
@@ -12,7 +23,12 @@ class WorldObject {
     mesh = null;
     texture = null;
     worldMatrix = [];
-    children = [];
+    parent = null;
+
+    // children = [];
+    // the intention was to call, for each update, the "onUpdate" function 
+    // of the class and do the same for each child WorldObject
+    // (Thanks Unity!)
 
     /**
      * Constructor of the WorldObject class. It provides default material parameters,
@@ -32,17 +48,32 @@ class WorldObject {
     constructor(obj) {
         console.log(obj);
         this.diffuseColor = obj.diffuseColor ? obj.diffuseColor : [1.0, 1.0, 1.0, 1.0];
-        this.emitColor = obj.emitColor ? obj.emitColor : [0.0, 0.0, 0.0, 1.0]
-        this.ambientColor = obj.ambientColor ? obj.ambientColor : [0.0, 0.0, 0.0, 1.0]
+        this.emitColor = obj.emitColor ? obj.emitColor : [0.0, 0.0, 0.0, 0.0];
+        this.ambientColor = obj.ambientColor ? obj.ambientColor : [0.0, 0.0, 0.0, 0.0];
         this.texture = obj.texture;
         this.hasTexture = obj.hasTexture != null ? obj.hasTexture : true;
         this.specularColor = obj.specularColor ? obj.specularColor : [0.0, 0.0, 0.0, 0.0];
-        this.specularShine = obj.specularShine ? obj.specularShine : 0.8;
+        this.specularShine = obj.specularShine ? obj.specularShine : 1.0;
         this.texFactor = obj.texFactor ? obj.texFactor : 1.0;
+        this.staticPos = obj.pos ? obj.pos : [0.0, 0.0, 0.0];
+        this.staticRotation = obj.rotation ? obj.rotation : [0.0, 0.0, 0.0];
+        this.staticScale = obj.scale ? obj.scale : 1;
+        this.parent = obj.parent;
+
+
         this.mesh = obj.mesh;
         if(this.mesh) {
             OBJ.initMeshBuffers(gl, this.mesh);
         }
+
+        // make sure to read the comments above
+        this.worldMatrix = utils.applyTransform([
+            utils.MakeTranslateMatrix(...this.staticPos), 
+            utils.MakeRotateYMatrix(this.staticRotation[1]),
+            utils.MakeRotateXMatrix(this.staticRotation[0]),
+            utils.MakeRotateZMatrix(this.staticRotation[2]),
+            utils.MakeScaleMatrix(this.staticScale)
+        ]);
     }
 
     update() {

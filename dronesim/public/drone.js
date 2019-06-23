@@ -154,7 +154,7 @@ class Drone extends WorldObject {
             newPos[i] -= delta[i];
         }
 
-            // ROTATION UPDATE
+        // ROTATION UPDATE
         this.angVel = this.mAS * deltaT * this.rvy;
 		let xaxis = [this.worldMatrix[0],this.worldMatrix[4],this.worldMatrix[8]];
 		let yaxis = [this.worldMatrix[1],this.worldMatrix[5],this.worldMatrix[9]];
@@ -206,5 +206,17 @@ class Drone extends WorldObject {
       this.angle = newAngle;
     }
   }
+}
 
+class Propeller extends WorldObject{
+    angVel = null;
+
+    constructor(obj) {
+        super(obj);
+        this.angVel = obj.angVel ? obj.angVel : 1;
+    }
+
+    update(obj) {
+        this.worldMatrix = this.parent.worldMatrix;
+    }
 }
