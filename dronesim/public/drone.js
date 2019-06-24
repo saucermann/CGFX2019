@@ -12,12 +12,12 @@ class Drone extends WorldObject {
     angVel = 0.0;	//Velocity for rotat
 
     // flying dynamic coefficients
-    sAT = 0.5;
-    mAT = 5.0;
+    sAT = 0.2;
+    mAT = 0.8;
     aTur = 3.0;
     aTdr = 5.5;
-    sBT = 1.0;
-    mBT = 3.0;
+    sBT = 0.5;
+    mBT = 0.5;
     bTur = 5.0;
     bTdr = 5.5;
     tFriction = Math.log(0.05);

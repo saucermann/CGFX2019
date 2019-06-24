@@ -8,7 +8,7 @@ var gl = null,
 var chunkMng;
 
 // Drawing environment variables
-var	skybox = null,
+var	skyBox = null,
 	skyboxLattx = null,
 	skyboxTbtx = null;
 
@@ -107,12 +107,7 @@ function computeDeltaT(){
 	return deltaT;
 }
 
-
-/**
- * Draws an object as seen on the camera. If textureOn, it draws the object with its texture.
- * @param {Array} obj
- */
-function draw(obj) {
+function drawBasics(obj){
 	// BINDING INPUT VARYINGS, VERTEX, NORMAL, TEXTURE UV, INDICES, TEXTURE ID
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.vertexBuffer);
 	gl.vertexAttribPointer(
@@ -124,20 +119,26 @@ function draw(obj) {
 		program.vertexNormalAttribute, obj.mesh.normalBuffer.itemSize,
 		gl.FLOAT, false, 0, 0
 	);
-	
+
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.textureBuffer);
 	gl.vertexAttribPointer(
 		program.textureCoordAttribute, obj.mesh.textureBuffer.itemSize,
 		gl.FLOAT, false, 0, 0
 	);
-	gl.uniform1i(program.textureUniform, obj.texture.id);	
+	gl.uniform1i(program.textureUniform, obj.texture.id);
 
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.mesh.indexBuffer);
+}
+/**
+ * Draws an object as seen on the camera. If textureOn, it draws the object with its texture.
+ * @param {Array} obj
+ */
+function drawObj(obj) {
+	drawBasics(obj);
 
 	// DO CALCULATIONS FOR OBJECT SPACE SHADERS
 	let inverseWorldMatrix = utils.invertMatrix(obj.worldMatrix);
-	let inverseViewMatrix = utils.invertMatrix(camera.viewMatrix);
-	let inverseWVMatrix = utils.multiplyMatrices(inverseViewMatrix, inverseWorldMatrix);
+	let inverseWVMatrix = utils.invertMatrix(utils.multiplyMatrices(obj.worldMatrix, camera.viewMatrix));
 	let WVPmatrix = utils.multiplyMatrices(camera.projectionMatrix, obj.worldMatrix);
 
 	// GET ALL THE UNIFORMS
@@ -164,13 +165,13 @@ function draw(obj) {
 		let lightColor = gl.getUniformLocation(program, "u_point_lights["+i+"].color");
 		gl.uniform4f(lightColor, ...lights.point[i].color);
 		let lightTarget = gl.getUniformLocation(program, "u_point_lights["+i+"].target");
-		gl.uniform1f(lightTarget, lights.point[i].target);	
+		gl.uniform1f(lightTarget, lights.point[i].target);
 	}
 
 	gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(WVPmatrix));
 	// the following is not needed anymore since shaders are in obj space
 	//gl.uniformMatrix4fv(program.NmatrixUniform, gl.FALSE, utils.transposeMatrix(obj.worldMatrix));
-	
+
 	// object and material properties
 	gl.uniform1f(program.texFactor, obj.texFactor);
 	gl.uniform1i(program.hasTexture, obj.hasTexture);
@@ -179,10 +180,40 @@ function draw(obj) {
 	gl.uniform4f(program.specularColor, ...obj.specularColor);
 	gl.uniform4f(program.emitColor, ...obj.emitColor);
 	gl.uniform4f(program.ambientColor, ...obj.ambientColor);
-	
+
 	gl.drawElements(gl.TRIANGLES, obj.mesh.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }
 
+function drawNotPhysical(obj) {
+	drawBasics(obj);
+
+	let WVPmatrix = utils.multiplyMatrices(camera.projectionMatrix, obj.worldMatrix);
+
+	// Lights and lights and lights
+
+	let inverseWorldMatrix = utils.invertMatrix(obj.worldMatrix);
+	let transformedLightDir = utils.normalizeVector3(
+		utils.multiplyMatrix3Vector3(inverseWorldMatrix, lights.direct.direction)
+	);
+
+	gl.uniform3f(program.dirLightDirection, ...transformedLightDir);
+	gl.uniform4f(program.dirLightColor, ...lights.direct.color);
+
+	gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(WVPmatrix));
+	// the following is not needed anymore since shaders are in obj space
+	//gl.uniformMatrix4fv(program.NmatrixUniform, gl.FALSE, utils.transposeMatrix(obj.worldMatrix));
+
+	// object and material properties
+	gl.uniform1f(program.texFactor, obj.texFactor);
+	gl.uniform1i(program.hasTexture, obj.hasTexture);
+	gl.uniform4f(program.diffuseColor, ...obj.diffuseColor);
+	gl.uniform1f(program.specularShine, obj.specularShine);
+	gl.uniform4f(program.specularColor, ...obj.specularColor);
+	gl.uniform4f(program.emitColor, ...obj.emitColor);
+	gl.uniform4f(program.ambientColor, ...obj.ambientColor);
+
+	gl.drawElements(gl.TRIANGLES, obj.mesh.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+}
 
 /**
  * Draws each animation frame, updates positions and delta time
@@ -194,8 +225,10 @@ function drawScene() {
 	deltaT = computeDeltaT();
 	//computing world matrix
 	gameObjects.forEach( v => v.update() );
+	skyBox.update();
 	camera.update();
-	gameObjects.forEach( v => draw(v));
+	gameObjects.forEach( v => drawObj(v));
+	drawNotPhysical(skyBox);
 	window.requestAnimationFrame(drawScene);
 }
 
@@ -280,8 +313,8 @@ function linkMeshAttr(program){
  */
 function prepareChunks(objects) {
 	chunkMng = new ChunkManager(
-		objects.map(v => v.mesh), 
-		objects.map(v => v.worldMatrix), 
+		objects.map(v => v.mesh),
+		objects.map(v => v.worldMatrix),
 		NUMOFCHUNKS
 	);
 }
@@ -323,7 +356,7 @@ async function main(){
 	setupCanvas();
 	// If assets are not ready, the game cannot start.
 	await loadAssets();
-	initializeWebGL();			
+	initializeWebGL();
 
 	drone = new Drone({
 		'pos': [0, 20, 0],
@@ -342,10 +375,10 @@ async function main(){
 		'scale': 20
 	});
 
-	var skyBox = new SkyBox({
+	skyBox = new SkyBox({
 		'mesh': new OBJ.Mesh(skyBoxObj),
 		'texture': new Texture('static/assets/textures/sky.jpg'),
-		'parent': drone,
+		'parent': drone
 	});
 
 	var cottage = new WorldObject({
@@ -368,18 +401,18 @@ async function main(){
 	});
 
 	let pl1 = new PointLight({
-		'pos': [15, -32, 18],
-		'decay': 5.0,
-		'target': 0.6,
-		'color': [1.0, 0.0, 0.0, 1.0]
+		'pos': [0, 21, 0],
+		'decay': 0.2,
+		'target': 0.9,
+		'color': [1, 1.0, 1.0, 1.0]
 	});
 
 	let ambient = new AmbientLight({
 		'color': [0.0, 0.0, 0.0, 1.0]
 	});
 
-	gameObjects.push(drone, terrain, skyBox, cottage);
-	
+	gameObjects.push(drone, terrain, cottage);
+
 	lights['direct'] = direct;
 	lights['point'].push(pl1);
 	lights['ambient'] = ambient;

@@ -1,6 +1,6 @@
 class WorldObject {
 
-    // CAREFUL NED, CAREFUL NOW! 
+    // CAREFUL NED, CAREFUL NOW!
     // The "update" function in each class breaks the initialization,
     // because does not calculate the world matrix for each frame
     // taking into account the previous one.
@@ -10,23 +10,23 @@ class WorldObject {
     staticPos = null;
     staticRotation = null;
     staticScale = null;
-    
+
     // Material properties
     diffuseColor = null;
-	emitColor = null;
-	ambientColor = null;
-	hasTexture = null;
-	specularColor = null;
-	specularShine = null;
-	texFactor = null;
-    
+  	emitColor = null;
+  	ambientColor = null;
+  	hasTexture = null;
+  	specularColor = null;
+  	specularShine = null;
+  	texFactor = null;
+
     mesh = null;
     texture = null;
     worldMatrix = [];
     parent = null;
 
     // children = [];
-    // the intention was to call, for each update, the "onUpdate" function 
+    // the intention was to call, for each update, the "onUpdate" function
     // of the class and do the same for each child WorldObject
     // (Thanks Unity!)
 
@@ -34,7 +34,7 @@ class WorldObject {
      * Constructor of the WorldObject class. It provides default material parameters,
      * mesh loading, texture, children and world matrix.
      * It must be used for static objects.
-     * @param {*} obj 
+     * @param {*} obj
      * - diffuseColor : Array(4)
      * - emitColor : Array(4)
      * - ambientColor : Array(4)
@@ -43,7 +43,7 @@ class WorldObject {
      * - specularColor : Array(4)
      * - specularShine : float
      * - texFactor: float in range(0,1)
-     * 
+     *
      */
     constructor(obj) {
         console.log(obj);
@@ -54,7 +54,7 @@ class WorldObject {
         this.hasTexture = obj.hasTexture != null ? obj.hasTexture : true;
         this.specularColor = obj.specularColor ? obj.specularColor : [0.0, 0.0, 0.0, 0.0];
         this.specularShine = obj.specularShine ? obj.specularShine : 1.0;
-        this.texFactor = obj.texFactor ? obj.texFactor : 1.0;
+        this.texFactor = obj.texFactor ? obj.texFactor : 1;
         this.staticPos = obj.pos ? obj.pos : [0.0, 0.0, 0.0];
         this.staticRotation = obj.rotation ? obj.rotation : [0.0, 0.0, 0.0];
         this.staticScale = obj.scale ? obj.scale : 1;
@@ -68,7 +68,7 @@ class WorldObject {
 
         // make sure to read the comments above
         this.worldMatrix = utils.applyTransform([
-            utils.MakeTranslateMatrix(...this.staticPos), 
+            utils.MakeTranslateMatrix(...this.staticPos),
             utils.MakeRotateYMatrix(this.staticRotation[1]),
             utils.MakeRotateXMatrix(this.staticRotation[0]),
             utils.MakeRotateZMatrix(this.staticRotation[2]),

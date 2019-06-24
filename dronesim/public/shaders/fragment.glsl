@@ -1,12 +1,12 @@
 #version 300 es
-#define MAX_POINT_LIGHTS 4  
+#define MAX_POINT_LIGHTS 4
 
 // This fragment shader works with a finite number of point lights,
 // a single direct light and an ambient light color.
 
 precision highp float;
 
-struct PointLight {    
+struct PointLight {
     vec3 position;
 	float decay;
 	vec4 color;
@@ -43,7 +43,7 @@ uniform PointLight 	u_point_lights[MAX_POINT_LIGHTS];
 out vec4 color;
 
 vec3 normal;
-vec3 eye_dir;	
+vec3 eye_dir;
 vec4 diffuse_color;
 vec4 ambient_color;
 vec4 emit_color;
@@ -59,12 +59,12 @@ float blinn_specular(vec3 light_direction) {
 
 vec4 calc_point_light(PointLight light) {
 	vec3 direction = normalize(light.position - fs_pos);
-	float attenuation = pow(light.target/length(light.position-fs_pos), light.decay);
+	float attenuation = pow(light.target/length(light.position - fs_pos), light.decay);
 	vec4 diffuse = lambert_diffuse(direction)*diffuse_color;
 	vec4 specular = blinn_specular(direction)*u_mat.specular;
 	vec4 color = light.color * attenuation;
-	return clamp(color*(diffuse+specular), 0.0, 1.0);
-} 
+	return clamp(color*(diffuse + specular), 0.0, 1.0);
+}
 
 vec4 calc_directional_light() {
 	vec4 diffuse = lambert_diffuse(u_dir_light.direction)*diffuse_color;
@@ -84,7 +84,7 @@ void main() {
 		diffuse_color = u_mat.diffuse * (1.0-u_tex_factor) + tex_color * u_tex_factor;
 		ambient_color = u_mat.ambient * (1.0-u_tex_factor) + tex_color * u_tex_factor;
 		emit_color = u_mat.emit * (1.0-u_tex_factor) +
-					tex_color * u_tex_factor * max(max(u_mat.emit.r, u_mat.emit.g), 
+					tex_color * u_tex_factor * max(max(u_mat.emit.r, u_mat.emit.g),
 					u_mat.emit.b);
 	} else {
 		diffuse_color = u_mat.diffuse;

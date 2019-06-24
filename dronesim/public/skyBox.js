@@ -1,3 +1,5 @@
+const FAR = 160;
+
 class SkyBox extends WorldObject {
     /**
      * Constructor of SkyBox class.
@@ -6,7 +8,7 @@ class SkyBox extends WorldObject {
     update() {
         this.worldMatrix = utils.applyTransform([
             utils.MakeTranslateMatrix(this.parent.pos[X],this.parent.pos[Y],this.parent.pos[Z]),
-            utils.MakeScaleMatrix(160)
+            utils.MakeScaleMatrix(FAR)
         ]);
     }
 }
