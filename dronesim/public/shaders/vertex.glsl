@@ -14,8 +14,8 @@ out vec3 fs_norm;
 out vec2 fs_uv;
 
 void main() {
-	fs_pos = normalize(in_pos);
-	fs_norm = normalize(in_norm);
+	fs_pos = in_pos;
+	fs_norm = in_norm;
 	
 	fs_uv = vec2(in_uv.x, 1.0-in_uv.y);
  

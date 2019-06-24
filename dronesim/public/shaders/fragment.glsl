@@ -54,7 +54,7 @@ vec4 emit_color;
 out vec4 color;
 
 float lambert_diffuse(vec3 light_direction) {
-	return clamp(dot(normal, light_direction),0.0,1.0);
+	return clamp(dot(light_direction, normal), 0.0, 1.0);
 }
 
 float blinn_specular(vec3 light_direction) {
@@ -74,11 +74,11 @@ vec4 calc_directional_light() {
 	vec4 diffuse = lambert_diffuse(u_dir_light.direction)*diffuse_color;
 	vec4 specular = blinn_specular(u_dir_light.direction)*u_mat.specular;
 	vec4 color = u_dir_light.color*(specular + diffuse);
-	return clamp(color, 0.0, 1.0);
+	return color;
 }
 
 void main() {
-	normal = fs_norm;
+	normal = normalize(fs_norm);
 	eye_dir = normalize(u_eye_pos - fs_pos);
 
 	// If the object has texture rendering on, then overwrite values for diffuse, ambient and
@@ -86,7 +86,7 @@ void main() {
 	if(u_has_texture) {
 		vec4 tex_color = texture(u_texture, fs_uv);
 		diffuse_color = u_mat.diffuse * (1.0-u_tex_factor) + tex_color * u_tex_factor;
-		ambient_color = u_mat.ambient * (1.0-u_tex_factor) + clamp(u_mat.ambient * tex_color, 0.0, 1.0) * u_tex_factor;
+		ambient_color = u_mat.ambient * (1.0-u_tex_factor) + tex_color * u_tex_factor;
 		emit_color = u_mat.emit * (1.0-u_tex_factor) +
 					tex_color * u_tex_factor * max(max(u_mat.emit.r, u_mat.emit.g),
 					u_mat.emit.b);
@@ -109,5 +109,6 @@ void main() {
 		point_lights_contrib += calc_point_light(u_point_lights[i]);
 	}
 
-	color = clamp(dir_light_contrib + point_lights_contrib + ambient + emit_color, 0.0, 1.0);
+	// discard alpha component
+	color = vec4(clamp(dir_light_contrib + point_lights_contrib + ambient + emit_color, 0.0, 1.0).rgb, 1.0);
 }

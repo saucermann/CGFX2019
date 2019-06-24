@@ -144,13 +144,11 @@ function drawObj(obj) {
 	// GET ALL THE UNIFORMS
 	// EYE Position
 	let eyePos = utils.multiplyMatrixVector(inverseWVMatrix, camera.pos.concat(1));
-	gl.uniform3f(program.eyePos, ...eyePos);
+	gl.uniform3f(program.eyePosition, ...eyePos);
 
 	// Lights and lights and lights
-	let transformedLightDir = utils.normalizeVector3(
-		utils.multiplyMatrix3Vector3(inverseWorldMatrix, lights.direct.direction)
-	);
-
+	let transformedLightDir = utils.multiplyMatrix3Vector3(inverseWorldMatrix, lights.direct.direction);
+	
 	gl.uniform3f(program.dirLightDirection, ...transformedLightDir);
 	gl.uniform4f(program.dirLightColor, ...lights.direct.color);
 	gl.uniform4f(program.ambientLightColor, ...lights.ambient.color);
@@ -332,7 +330,7 @@ async function main(){
 		'mesh': new OBJ.Mesh(droneObj),
 		'texture': new Texture('static/assets/textures/drone.png'),
 		'collisionOn': true,
-		'specularColor': [0.3, 0.3, 0.3, 1.0],
+		'specularColor': [0.3, 0.3, 0.3, 0.0],
 		'specularShine': 0.1,
 		'texFactor': 1.0,
 		'diffuseColor': [0.5, 0.0, 0.0, 1.0]
@@ -343,14 +341,16 @@ async function main(){
 		'texture': new Texture('static/assets/textures/park.jpg'),
 		'pos': [-200, -80, 600],
 		'rotation': [270, 0, 0],
+		'specularColor': [1.0, 1.0, 1.0, 0.0],
+		'specularShine': 0.1,
 		'scale': 20,
 	});
 
 	skyBox = new SkyBox({
 		'mesh': new OBJ.Mesh(skyBoxObj),
-		'ambientColor': [0.0, 0.0, 0.0, 1.0],
+		'ambientColor': [0.0, 0.0, 0.0, 0.0],
 		'emitColor': [0.780, 1, 0.996, 1.0],
-		'diffuseColor': [0.0, 0.0, 0.0, 1.0],
+		'diffuseColor': [0.0, 0.0, 0.0, 0.0],
 		'parent': drone
 	});
 
@@ -358,6 +358,8 @@ async function main(){
 		'mesh': new OBJ.Mesh(cottageObj),
 		'pos': [-50, -35.5, 2],
 		'texture': new Texture('static/assets/textures/cottage_diffuse.png'),
+		'specularColor': [0.1, 0.1, 0.1, 0.0],
+		'specularShine': 0.1
 	});
 
 	camera = new Camera({
@@ -367,26 +369,26 @@ async function main(){
 	});
 
 	let direct = new DirectionalLight({
-		'color': [1.0, 0.960, 0.6, 1.0],
+		'color': [1.0, 1.0, 1.0, 0.0],
 		'direction' : [0.60, 0.35, 0.70, 0.0]
 	});
 
 	let pl1 = new PointLight({
 		'pos': [-25.385465399055263, -13.729757176411203, 1.6249925886468297],
 		'decay': 0.3,
-		'target': 1.0,
+		'target': 0.1,
 		'color': [0.0, 1.0, 0.0, 1.0]
 	});
 
 	let pl2 = new PointLight({
 		'pos': [-52.83206916038585, -30.55721261313922, -17.550776291900426],
 		'decay': 0.1,
-		'target': 0.8,
+		'target': 0.1,
 		'color': [0.0, 0.0, 1.0, 1.0]
 	});
 
 	let ambient = new AmbientLight({
-		'color': [1.0, 0.960, 0.6, 1.0],
+		'color': [0.5, 0.48, 0.3, 0.0],
 	});
 
 	gameObjects.push(drone, terrain, skyBox, cottage);
