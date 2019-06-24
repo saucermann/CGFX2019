@@ -48,16 +48,16 @@ class WorldObject {
     constructor(obj) {
         console.log(obj);
         this.diffuseColor = obj.diffuseColor ? obj.diffuseColor : [1.0, 1.0, 1.0, 1.0];
-        this.emitColor = obj.emitColor ? obj.emitColor : [0.0, 0.0, 0.0, 0.0];
-        this.ambientColor = obj.ambientColor ? obj.ambientColor : [0.0, 0.0, 0.0, 0.0];
+        this.emitColor = obj.emitColor ? obj.emitColor : [0.0, 0.0, 0.0, 1.0];
+        this.ambientColor = obj.ambientColor ? obj.ambientColor : [0.3, 0.3, 0.3, 1.0];
         this.texture = obj.texture;
-        this.hasTexture = obj.hasTexture != null ? obj.hasTexture : true;
-        this.specularColor = obj.specularColor ? obj.specularColor : [0.0, 0.0, 0.0, 0.0];
-        this.specularShine = obj.specularShine ? obj.specularShine : 1.0;
-        this.texFactor = obj.texFactor ? obj.texFactor : 1;
+        this.hasTexture = obj.texture ? true : false;
+        this.specularColor = obj.specularColor ? obj.specularColor : [0.0, 0.0, 0.0, 1.0];
+        this.specularShine = obj.specularShine != null ? obj.specularShine : 0.0001;
+        this.texFactor = obj.texFactor != null ? obj.texFactor : 1.0;
         this.staticPos = obj.pos ? obj.pos : [0.0, 0.0, 0.0];
         this.staticRotation = obj.rotation ? obj.rotation : [0.0, 0.0, 0.0];
-        this.staticScale = obj.scale ? obj.scale : 1;
+        this.staticScale = obj.scale != null ? obj.scale : 1;
         this.parent = obj.parent;
 
 

@@ -119,14 +119,14 @@ function drawBasics(obj){
 		program.vertexNormalAttribute, obj.mesh.normalBuffer.itemSize,
 		gl.FLOAT, false, 0, 0
 	);
-
 	gl.bindBuffer(gl.ARRAY_BUFFER, obj.mesh.textureBuffer);
 	gl.vertexAttribPointer(
 		program.textureCoordAttribute, obj.mesh.textureBuffer.itemSize,
 		gl.FLOAT, false, 0, 0
 	);
-	gl.uniform1i(program.textureUniform, obj.texture.id);
-
+	let textureId = obj.hasTexture ? obj.texture.id : null;
+	gl.uniform1i(program.textureUniform, textureId);
+	
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.mesh.indexBuffer);
 }
 /**
@@ -184,36 +184,6 @@ function drawObj(obj) {
 	gl.drawElements(gl.TRIANGLES, obj.mesh.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }
 
-function drawNotPhysical(obj) {
-	drawBasics(obj);
-
-	let WVPmatrix = utils.multiplyMatrices(camera.projectionMatrix, obj.worldMatrix);
-
-	// Lights and lights and lights
-
-	let inverseWorldMatrix = utils.invertMatrix(obj.worldMatrix);
-	let transformedLightDir = utils.normalizeVector3(
-		utils.multiplyMatrix3Vector3(inverseWorldMatrix, lights.direct.direction)
-	);
-
-	gl.uniform3f(program.dirLightDirection, ...transformedLightDir);
-	gl.uniform4f(program.dirLightColor, ...lights.direct.color);
-
-	gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(WVPmatrix));
-	// the following is not needed anymore since shaders are in obj space
-	//gl.uniformMatrix4fv(program.NmatrixUniform, gl.FALSE, utils.transposeMatrix(obj.worldMatrix));
-
-	// object and material properties
-	gl.uniform1f(program.texFactor, obj.texFactor);
-	gl.uniform1i(program.hasTexture, obj.hasTexture);
-	gl.uniform4f(program.diffuseColor, ...obj.diffuseColor);
-	gl.uniform1f(program.specularShine, obj.specularShine);
-	gl.uniform4f(program.specularColor, ...obj.specularColor);
-	gl.uniform4f(program.emitColor, ...obj.emitColor);
-	gl.uniform4f(program.ambientColor, ...obj.ambientColor);
-
-	gl.drawElements(gl.TRIANGLES, obj.mesh.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-}
 
 /**
  * Draws each animation frame, updates positions and delta time
@@ -225,10 +195,8 @@ function drawScene() {
 	deltaT = computeDeltaT();
 	//computing world matrix
 	gameObjects.forEach( v => v.update() );
-	skyBox.update();
 	camera.update();
 	gameObjects.forEach( v => drawObj(v));
-	drawNotPhysical(skyBox);
 	window.requestAnimationFrame(drawScene);
 }
 
@@ -307,6 +275,7 @@ function linkMeshAttr(program){
 	return program;
 }
 
+
 /**
  * Checks collisions of the drone with each object in the array
  * @param {Array} objects
@@ -363,8 +332,10 @@ async function main(){
 		'mesh': new OBJ.Mesh(droneObj),
 		'texture': new Texture('static/assets/textures/drone.png'),
 		'collisionOn': true,
-		'specularColor': [1.0, 1.0, 1.0, 1.0],
-		'specularShine': 1.0,
+		'specularColor': [0.3, 0.3, 0.3, 1.0],
+		'specularShine': 0.1,
+		'texFactor': 1.0,
+		'diffuseColor': [0.5, 0.0, 0.0, 1.0]
 	});
 
 	var terrain = new WorldObject({
@@ -372,20 +343,20 @@ async function main(){
 		'texture': new Texture('static/assets/textures/park.jpg'),
 		'pos': [-200, -80, 600],
 		'rotation': [270, 0, 0],
-		'scale': 20
+		'scale': 20,
 	});
 
 	skyBox = new SkyBox({
 		'mesh': new OBJ.Mesh(skyBoxObj),
-		'texture': new Texture('static/assets/textures/sky.jpg'),
+		'ambientColor': [0.0, 0.0, 0.0, 1.0],
+		'emitColor': [0.780, 1, 0.996, 1.0],
+		'diffuseColor': [0.0, 0.0, 0.0, 1.0],
 		'parent': drone
 	});
 
 	var cottage = new WorldObject({
 		'mesh': new OBJ.Mesh(cottageObj),
-		'pos': [0, -40, 0],
-		'specularColor': [0.0, 0.0, 0.0, 1.0],
-		'specularShine': 0.8,
+		'pos': [-50, -35.5, 2],
 		'texture': new Texture('static/assets/textures/cottage_diffuse.png'),
 	});
 
@@ -396,25 +367,32 @@ async function main(){
 	});
 
 	let direct = new DirectionalLight({
-		'color': [1.0, 1.0, 1.0, 1.0],
+		'color': [1.0, 0.960, 0.6, 1.0],
 		'direction' : [0.60, 0.35, 0.70, 0.0]
 	});
 
 	let pl1 = new PointLight({
-		'pos': [0, 21, 0],
-		'decay': 0.2,
-		'target': 0.9,
-		'color': [1, 1.0, 1.0, 1.0]
+		'pos': [-25.385465399055263, -13.729757176411203, 1.6249925886468297],
+		'decay': 0.3,
+		'target': 1.0,
+		'color': [0.0, 1.0, 0.0, 1.0]
+	});
+
+	let pl2 = new PointLight({
+		'pos': [-52.83206916038585, -30.55721261313922, -17.550776291900426],
+		'decay': 0.1,
+		'target': 0.8,
+		'color': [0.0, 0.0, 1.0, 1.0]
 	});
 
 	let ambient = new AmbientLight({
-		'color': [0.0, 0.0, 0.0, 1.0]
+		'color': [1.0, 0.960, 0.6, 1.0],
 	});
 
-	gameObjects.push(drone, terrain, cottage);
+	gameObjects.push(drone, terrain, skyBox, cottage);
 
 	lights['direct'] = direct;
-	lights['point'].push(pl1);
+	lights['point'].push(pl1, pl2);
 	lights['ambient'] = ambient;
 
 

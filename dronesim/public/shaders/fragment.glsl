@@ -32,21 +32,26 @@ in vec2 fs_uv;
 
 uniform sampler2D 	u_texture;
 uniform vec3 		u_eye_pos;
-uniform vec4 		u_amb_light;
 uniform bool 		u_has_texture;
 uniform float 		u_tex_factor;
-uniform int 		u_pl_length;
 uniform Material	u_mat;
+
+// Lights and params
+uniform vec4 		u_amb_light;
 uniform DirectLight u_dir_light;
 uniform PointLight 	u_point_lights[MAX_POINT_LIGHTS];
+uniform int 		u_pl_length;
 
-out vec4 color;
-
+// Normalized normals and eye direction
 vec3 normal;
 vec3 eye_dir;
+
+// Material colors recalculated using textures
 vec4 diffuse_color;
 vec4 ambient_color;
 vec4 emit_color;
+
+out vec4 color;
 
 float lambert_diffuse(vec3 light_direction) {
 	return clamp(dot(normal, light_direction),0.0,1.0);
@@ -58,12 +63,11 @@ float blinn_specular(vec3 light_direction) {
 }
 
 vec4 calc_point_light(PointLight light) {
-	vec3 direction = normalize(light.position - fs_pos);
-	float attenuation = pow(light.target/length(light.position - fs_pos), light.decay);
+	vec3 direction = normalize(light.position-fs_pos);
+	float attenuation = pow(light.target/length(light.position-fs_pos), light.decay);
 	vec4 diffuse = lambert_diffuse(direction)*diffuse_color;
 	vec4 specular = blinn_specular(direction)*u_mat.specular;
-	vec4 color = light.color * attenuation;
-	return clamp(color*(diffuse + specular), 0.0, 1.0);
+	return light.color*attenuation*(diffuse + specular);
 }
 
 vec4 calc_directional_light() {
@@ -74,7 +78,7 @@ vec4 calc_directional_light() {
 }
 
 void main() {
-	normal = normalize(fs_norm);
+	normal = fs_norm;
 	eye_dir = normalize(u_eye_pos - fs_pos);
 
 	// If the object has texture rendering on, then overwrite values for diffuse, ambient and
@@ -82,7 +86,7 @@ void main() {
 	if(u_has_texture) {
 		vec4 tex_color = texture(u_texture, fs_uv);
 		diffuse_color = u_mat.diffuse * (1.0-u_tex_factor) + tex_color * u_tex_factor;
-		ambient_color = u_mat.ambient * (1.0-u_tex_factor) + tex_color * u_tex_factor;
+		ambient_color = u_mat.ambient * (1.0-u_tex_factor) + clamp(u_mat.ambient * tex_color, 0.0, 1.0) * u_tex_factor;
 		emit_color = u_mat.emit * (1.0-u_tex_factor) +
 					tex_color * u_tex_factor * max(max(u_mat.emit.r, u_mat.emit.g),
 					u_mat.emit.b);

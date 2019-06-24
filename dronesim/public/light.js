@@ -26,8 +26,8 @@ class PointLight extends Light {
     constructor(obj) {
         super(obj);
         this.pos = obj.pos ? obj.pos : null;
-        this.decay = obj.decay ? obj.decay : null;
-        this.target = obj.target ? obj.target : null;        
+        this.decay = obj.decay != null ? obj.decay : 0.1;
+        this.target = obj.target != null ? obj.target : 0.1;        
     }
 }
 
