@@ -103,7 +103,7 @@ void main() {
 	vec4 dir_light_contrib = calc_directional_light();
 
 	// Evaluate point lights contribution
-	vec4 point_lights_contrib = vec4(0.0, 0.0, 0.0, 0.0);
+	vec4 point_lights_contrib = vec4(0.0);
 
 	for (int i = 0; i < u_pl_length; i++) {
 		point_lights_contrib += calc_point_light(u_point_lights[i]);

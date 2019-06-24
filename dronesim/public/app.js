@@ -24,6 +24,7 @@ var droneObj;
 var terrainObj;
 var skyBoxObj;
 var cottageObj;
+var earthObj;
 
 //Time variables
 var lastUpdateTime;
@@ -52,6 +53,7 @@ async function loadAssets() {
 		utils.load('./static/assets/objects/terrain.obj').then( text => terrainObj = text),
 		utils.load('./static/assets/objects/skyBox.obj').then( text => skyBoxObj = text),
 		utils.load('./static/assets/objects/cottage_obj.obj').then( text => cottageObj = text),
+		utils.load('./static/assets/objects/earth.obj').then( text => earthObj = text),
 	]);
 	console.log("Done.")
 }
@@ -333,7 +335,7 @@ async function main(){
 		'specularColor': [0.3, 0.3, 0.3, 0.0],
 		'specularShine': 0.1,
 		'texFactor': 1.0,
-		'diffuseColor': [0.5, 0.0, 0.0, 1.0]
+		'diffuseColor': [0.5, 0.0, 0.0, 1.0],
 	});
 
 	var terrain = new WorldObject({
@@ -341,8 +343,8 @@ async function main(){
 		'texture': new Texture('static/assets/textures/park.jpg'),
 		'pos': [-200, -80, 600],
 		'rotation': [270, 0, 0],
-		'specularColor': [1.0, 1.0, 1.0, 0.0],
-		'specularShine': 0.1,
+		'specularColor': [0.3, 0.3, 0.3, 0.0],
+		'specularShine': 1.0,
 		'scale': 20,
 	});
 
@@ -358,8 +360,8 @@ async function main(){
 		'mesh': new OBJ.Mesh(cottageObj),
 		'pos': [-50, -35.5, 2],
 		'texture': new Texture('static/assets/textures/cottage_diffuse.png'),
-		'specularColor': [0.1, 0.1, 0.1, 0.0],
-		'specularShine': 0.1
+		'specularColor': [0.3, 0.3, 0.3, 0.0],
+		'specularShine': 0.8,
 	});
 
 	camera = new Camera({
@@ -368,6 +370,15 @@ async function main(){
 		'farPlane': 300
 	});
 
+	/*let earth = new WorldObject({
+		'pos': [-50, -30, 2],
+		'mesh': new OBJ.Mesh(earthObj),
+		'diffuseColor': [1.0, 0.0, 1.0, 0.0],
+		'specularColor': [1.0, 1.0, 1.0, 0.0],
+		'specularShine': 0.8,
+		'emitColor': [0.0, 0.0, 1.0, 0.0]
+	})*/
+
 	let direct = new DirectionalLight({
 		'color': [1.0, 1.0, 1.0, 0.0],
 		'direction' : [0.60, 0.35, 0.70, 0.0]
@@ -375,14 +386,14 @@ async function main(){
 
 	let pl1 = new PointLight({
 		'pos': [-25.385465399055263, -13.729757176411203, 1.6249925886468297],
-		'decay': 0.3,
+		'decay': 0.9,
 		'target': 0.1,
 		'color': [0.0, 1.0, 0.0, 1.0]
 	});
 
 	let pl2 = new PointLight({
 		'pos': [-52.83206916038585, -30.55721261313922, -17.550776291900426],
-		'decay': 0.1,
+		'decay': 0.9,
 		'target': 0.1,
 		'color': [0.0, 0.0, 1.0, 1.0]
 	});
@@ -396,7 +407,6 @@ async function main(){
 	lights['direct'] = direct;
 	lights['point'].push(pl1, pl2);
 	lights['ambient'] = ambient;
-
 
 	prepareChunks([terrain, cottage]);
 	drawScene();
