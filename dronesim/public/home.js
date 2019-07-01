@@ -45,6 +45,21 @@ function getColor(id){
   return [0,0,0,0];
 }
 
+function getHex(color){
+  var result = "#";
+  var tmp;
+  for(let i=0; i<3; i++){
+    tmp = Math.round(color[i]*255)
+    if(tmp<10){
+      result+="0"+tmp.toString(16);
+    }else{
+      result+=tmp.toString(16);
+    }
+
+  }
+  return result;
+}
+
 function setColor(light){
   switch(light){
     case "dirCol": lights["direct"].color = getColor(light);
@@ -203,4 +218,33 @@ function switchElem(elem){
                   break;
     default : break;
   }
+}
+
+
+function initInput(){
+  document.getElementById("dirCol").value = getHex(lights["direct"].color);
+  document.getElementById("ambCol").value = getHex(lights["ambient"].color);
+  document.getElementById("po1Col").value = getHex(lights["point"][0].color);
+  document.getElementById("po2Col").value = getHex(lights["point"][1].color);
+  document.getElementById("po3Col").value = getHex(lights["point"][2].color);
+  document.getElementById("skyCol").value = getHex(skyBox.emitColor);
+
+  document.getElementById("dirX").value = lights["direct"].direction[0];
+  document.getElementById("dirY").value = lights["direct"].direction[1];
+  document.getElementById("dirZ").value = lights["direct"].direction[2];
+
+  document.getElementById("po1X").value = lights["point"][0].pos[0];
+  document.getElementById("po1Y").value = lights["point"][0].pos[1];
+  document.getElementById("po1Z").value = lights["point"][0].pos[2];
+  document.getElementById("po2X").value = lights["point"][1].pos[0];
+  document.getElementById("po2Y").value = lights["point"][1].pos[1];
+  document.getElementById("po2Z").value = lights["point"][1].pos[2];
+  document.getElementById("po3X").value = lights["point"][2].pos[0];
+  document.getElementById("po3Y").value = lights["point"][2].pos[1];
+  document.getElementById("po3Z").value = lights["point"][2].pos[2];
+
+  document.getElementById("droX").value = drone.pos[0];
+  document.getElementById("droY").value = drone.pos[1];
+  document.getElementById("droZ").value = drone.pos[2];
+
 }

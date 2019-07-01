@@ -391,7 +391,7 @@ async function main(){
 
 	camera = new Camera({
 		'target': drone,
-		'targetDistance': [0, 1.5, -2.5, 1],
+		'targetDistance': [0, 2, -3, 1],
 		'farPlane': 300
 	});
 
@@ -442,5 +442,6 @@ async function main(){
 	lights['ambient'] = ambient;
 
 	prepareChunks([terrain, cottage]);
+	initInput();
 	drawScene();
 }

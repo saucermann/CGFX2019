@@ -17,6 +17,7 @@ class Drone extends WorldObject {
     aTur = 5.0;
     aTdr = 5.5;
     sBT = 2;
+    sBTBack = 0.9;
     mBT = 0.1;
     bTur = 5.0;
     bTdr = 5.5;
@@ -98,13 +99,13 @@ class Drone extends WorldObject {
      * @param {*} droneLinAcc
      * @param {*} deltaT
      */
-    __calculateAcc(v, preV, droneLinAcc, deltaT) {
+    __calculateAcc(v, preV, droneLinAcc, deltaT, coord) {
         v = -v;
         if(v > 0.1) {
             if(preV > 0.1) {
                 droneLinAcc = droneLinAcc + this.aTur * deltaT;
-            if(droneLinAcc > this.sAT)
-                droneLinAcc = this.sAT;
+                if(droneLinAcc > this.sAT)
+                    droneLinAcc = this.sAT;
             } else if(droneLinAcc < this.mAT)
                 droneLinAcc = this.mAT;
         } else if(v > -0.1) {
@@ -112,8 +113,14 @@ class Drone extends WorldObject {
         } else {
             if(preV < 0.1) {
                 droneLinAcc = droneLinAcc - this.bTur * deltaT;
-            if(droneLinAcc < -this.sBT)
-                droneLinAcc = -this.sBT;
+                if(coord==Z){
+                  if(droneLinAcc < this.sBTBack){
+                    droneLinAcc = -this.sBTBack;
+                  }
+                }else{
+                  if(droneLinAcc < -this.sBT)
+                      droneLinAcc = -this.sBT;
+                }
             } else if(droneLinAcc > -this.mBT)
                 droneLinAcc = -this.mBT;
         }
@@ -137,7 +144,7 @@ class Drone extends WorldObject {
         // 3 is hardcoded since velocity, position, acceleration are expressed by 3 coordinates
         // for each coordinate update its value
         for(var i=0; i<3; i++) {
-            this.linAcc[i] = this.__calculateAcc(this.vel[i], this.prevVel[i], this.linAcc[i], deltaT);
+            this.linAcc[i] = this.__calculateAcc(this.vel[i], this.prevVel[i], this.linAcc[i], deltaT, i);
             this.prevVel[i] = -this.vel[i];
             this.linVel[i] = this.linVel[i] * Math.exp(this.tFriction * deltaT) - deltaT * this.linAcc[i];
         }
