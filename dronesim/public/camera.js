@@ -8,7 +8,7 @@ class Camera {
     roll = null;
 
     // let's not change these two since we don't know what they do
-    fSk = 400.0;
+    fSk = 1000.0;
     fDk = 2.0 * Math.sqrt(this.fSk);
 
     fovY = 60;

@@ -3,7 +3,7 @@ class Light {
 
     constructor(obj) {
         if (this.constructor === Light) {
-            throw new TypeError('Abstract class "Light" cannot be instantiated directly.'); 
+            throw new TypeError('Abstract class "Light" cannot be instantiated directly.');
         }
         this.color = obj.color ? obj.color : null;
     }
@@ -14,7 +14,7 @@ class DirectionalLight extends Light {
 
     constructor(obj) {
         super(obj);
-        this.direction = obj.direction ? obj.direction : null;
+        this.direction = obj.direction ? [obj.direction[X],obj.direction[Y],obj.direction[Z],1] : null;
     }
 }
 
@@ -27,7 +27,7 @@ class PointLight extends Light {
         super(obj);
         this.pos = obj.pos ? obj.pos : null;
         this.decay = obj.decay != null ? obj.decay : 0.1;
-        this.target = obj.target != null ? obj.target : 0.1;        
+        this.target = obj.target != null ? obj.target : 0.1;
     }
 }
 

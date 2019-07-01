@@ -12,12 +12,12 @@ class Drone extends WorldObject {
     angVel = 0.0;	//Velocity for rotat
 
     // flying dynamic coefficients
-    sAT = 0.2;
-    mAT = 0.8;
+    sAT = 1; //saturation
+    mAT = 0.1; //minimum
     aTur = 3.0;
     aTdr = 5.5;
-    sBT = 0.5;
-    mBT = 0.5;
+    sBT = 1;
+    mBT = 0.1;
     bTur = 5.0;
     bTdr = 5.5;
     tFriction = Math.log(0.05);
@@ -103,21 +103,19 @@ class Drone extends WorldObject {
         if(v > 0.1) {
             if(preV > 0.1) {
                 droneLinAcc = droneLinAcc + this.aTur * deltaT;
-            if(droneLinAcc > this.mAT)
-                droneLinAcc = this.mAT;
-            } else if(droneLinAcc < this.sAT)
+            if(droneLinAcc > this.sAT)
                 droneLinAcc = this.sAT;
+            } else if(droneLinAcc < this.mAT)
+                droneLinAcc = this.mAT;
         } else if(v > -0.1) {
-            droneLinAcc = droneLinAcc - this.aTdr * deltaT * Math.sign(droneLinAcc);
-            if(Math.abs(droneLinAcc) < 0.001)
                 droneLinAcc = 0.0;
         } else {
             if(preV < 0.1) {
                 droneLinAcc = droneLinAcc - this.bTur * deltaT;
-            if(droneLinAcc < -this.mBT)
-                droneLinAcc = -this.mBT;
-            } else if(droneLinAcc > -this.sBT)
+            if(droneLinAcc < -this.sBT)
                 droneLinAcc = -this.sBT;
+            } else if(droneLinAcc > -this.mBT)
+                droneLinAcc = -this.mBT;
         }
         return droneLinAcc;
     }
@@ -132,7 +130,7 @@ class Drone extends WorldObject {
         let translationMatrix = utils.MakeTranslateMatrix(this.pos[X],this.pos[Y],this.pos[Z]);
             //rotation of droneRotation around the y axis
         let rotationMatrix = utils.MakeRotateYMatrix(this.angle);
-        this.worldMatrix = utils.applyTransform([translationMatrix, rotationMatrix]);
+        this.worldMatrix = utils.applyTransform([translationMatrix, rotationMatrix, utils.MakeScaleMatrix(this.staticScale)]);
         var newPos = [this.pos[X],this.pos[Y],this.pos[Z]];
         var newAngle = this.angle;
         // 3 is hardcoded since velocity, position, acceleration are expressed by 3 coordinates
@@ -195,9 +193,9 @@ class Drone extends WorldObject {
     let futureWorldMatrix = utils.multiplyMatrices(futureTranslationMatrix, futureRotationMatrix);
     if(this.collisionOn && chunkMng.checkCollision(this,futureWorldMatrix)){
       for(var i=0; i<3; i++) {
-          this.linAcc[i] = -this.linAcc[i]/4;
-          this.prevVel[i] = this.vel[i]/4;
-          this.linVel[i] = -this.linVel[i]/4;
+          this.linAcc[i] = -this.linAcc[i]/3.5;
+          this.prevVel[i] = this.vel[i]/3.5;
+          this.linVel[i] = -this.linVel[i]/3.5;
       }
 
       this.angVel = -this.angVel
