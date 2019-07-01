@@ -138,52 +138,68 @@ function drawBasics(obj){
  * @param {Array} obj
  */
 function drawObj(obj) {
-	drawBasics(obj);
+	if(!obj.toBeDrawn){
+		return 0;
+	}else{
+		drawBasics(obj);
 
-	// DO CALCULATIONS FOR OBJECT SPACE SHADERS
-	let inverseWorldMatrix = utils.invertMatrix(obj.worldNotScale ? obj.worldNotScale : obj.worldMatrix);
-	let inverseWVMatrix = utils.invertMatrix(utils.multiplyMatrices(obj.worldNotScale ? obj.worldNotScale : obj.worldMatrix, camera.viewMatrix));
-	let WVPmatrix = utils.multiplyMatrices(camera.projectionMatrix, obj.worldMatrix);
+		// DO CALCULATIONS FOR OBJECT SPACE SHADERS
+		let inverseWorldMatrix = utils.invertMatrix(obj.worldNotScale ? obj.worldNotScale : obj.worldMatrix);
+		let inverseWVMatrix = utils.invertMatrix(utils.multiplyMatrices(obj.worldNotScale ? obj.worldNotScale : obj.worldMatrix, camera.viewMatrix));
+		let WVPmatrix = utils.multiplyMatrices(camera.projectionMatrix, obj.worldMatrix);
 
-	// GET ALL THE UNIFORMS
-	// EYE Position
-	let eyePos = utils.multiplyMatrixVector(inverseWVMatrix, camera.pos.concat(1));
-	gl.uniform3f(program.eyePosition, ...eyePos);
+		// GET ALL THE UNIFORMS
+		// EYE Position
+		let eyePos = utils.multiplyMatrixVector(inverseWVMatrix, camera.pos.concat(1));
+		gl.uniform3f(program.eyePosition, ...eyePos);
 
-	// Lights and lights and lights
-	let transformedLightDir = utils.multiplyMatrix3Vector3(inverseWorldMatrix, lights.direct.direction);
+		// Lights and lights and lights
+		let transformedLightDir = utils.multiplyMatrix3Vector3(inverseWorldMatrix, lights.direct.direction);
 
-	gl.uniform3f(program.dirLightDirection, ...transformedLightDir);
-	gl.uniform4f(program.dirLightColor, ...lights.direct.color);
-	gl.uniform4f(program.ambientLightColor, ...lights.ambient.color);
-	gl.uniform1i(program.pointLightsLength, lights.point.length);
+		gl.uniform3f(program.dirLightDirection, ...transformedLightDir);
+		if(lights.direct.on){
+			gl.uniform4f(program.dirLightColor, ...lights.direct.color);
+		}else{
+			gl.uniform4f(program.dirLightColor, ...[0,0,0,1]);
+		}
+		if(lights.ambient.on){
+			gl.uniform4f(program.ambientLightColor, ...lights.ambient.color);
+		}else{
+			gl.uniform4f(program.ambientLightColor, ...[0,0,0,1]);
+		}
+		gl.uniform1i(program.pointLightsLength, lights.point.length);
 
-	for(let i=0; i<lights.point.length; i++) {
-		let lightPos = gl.getUniformLocation(program, "u_point_lights["+i+"].position");
-		let transformedLightPos = utils.multiplyMatrixVector(inverseWorldMatrix, lights.point[i].pos.concat(1))
-		gl.uniform3f(lightPos, ...transformedLightPos);
-		let lightDecay = gl.getUniformLocation(program, "u_point_lights["+i+"].decay");
-		gl.uniform1f(lightDecay, lights.point[i].decay);
-		let lightColor = gl.getUniformLocation(program, "u_point_lights["+i+"].color");
-		gl.uniform4f(lightColor, ...lights.point[i].color);
-		let lightTarget = gl.getUniformLocation(program, "u_point_lights["+i+"].target");
-		gl.uniform1f(lightTarget, lights.point[i].target);
+		for(let i=0; i<lights.point.length; i++) {
+				let lightPos = gl.getUniformLocation(program, "u_point_lights["+i+"].position");
+				let transformedLightPos = utils.multiplyMatrixVector(inverseWorldMatrix, lights.point[i].pos.concat(1))
+				gl.uniform3f(lightPos, ...transformedLightPos);
+				let lightDecay = gl.getUniformLocation(program, "u_point_lights["+i+"].decay");
+				gl.uniform1f(lightDecay, lights.point[i].decay);
+				let lightColor = gl.getUniformLocation(program, "u_point_lights["+i+"].color");
+				if(lights.point[i].on){
+						gl.uniform4f(lightColor, ...lights.point[i].color);
+				}else{
+					gl.uniform4f(lightColor, ...[0,0,0,1]);
+				}
+				let lightTarget = gl.getUniformLocation(program, "u_point_lights["+i+"].target");
+				gl.uniform1f(lightTarget, lights.point[i].target);
+		}
+
+		gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(WVPmatrix));
+		// the following is not needed anymore since shaders are in obj space
+		//gl.uniformMatrix4fv(program.NmatrixUniform, gl.FALSE, utils.transposeMatrix(obj.worldMatrix));
+
+		// object and material properties
+		gl.uniform1f(program.texFactor, obj.texFactor);
+		gl.uniform1i(program.hasTexture, obj.hasTexture);
+		gl.uniform4f(program.diffuseColor, ...obj.diffuseColor);
+		gl.uniform1f(program.specularShine, obj.specularShine);
+		gl.uniform4f(program.specularColor, ...obj.specularColor);
+		gl.uniform4f(program.emitColor, ...obj.emitColor);
+		gl.uniform4f(program.ambientColor, ...obj.ambientColor);
+
+		gl.drawElements(gl.TRIANGLES, obj.mesh.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 	}
-
-	gl.uniformMatrix4fv(program.WVPmatrixUniform, gl.FALSE, utils.transposeMatrix(WVPmatrix));
-	// the following is not needed anymore since shaders are in obj space
-	//gl.uniformMatrix4fv(program.NmatrixUniform, gl.FALSE, utils.transposeMatrix(obj.worldMatrix));
-
-	// object and material properties
-	gl.uniform1f(program.texFactor, obj.texFactor);
-	gl.uniform1i(program.hasTexture, obj.hasTexture);
-	gl.uniform4f(program.diffuseColor, ...obj.diffuseColor);
-	gl.uniform1f(program.specularShine, obj.specularShine);
-	gl.uniform4f(program.specularColor, ...obj.specularColor);
-	gl.uniform4f(program.emitColor, ...obj.emitColor);
-	gl.uniform4f(program.ambientColor, ...obj.ambientColor);
-
-	gl.drawElements(gl.TRIANGLES, obj.mesh.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }
 
 
@@ -338,7 +354,8 @@ async function main(){
 		'specularShine': 0.1,
 		'texFactor': 1.0,
 		'diffuseColor': [0.5, 0.0, 0.0, 1.0],
-		'scale': 1,
+		'scale': 2,
+		'worldNotScale' : true
 	});
 
 	terrain = new WorldObject({
@@ -374,7 +391,7 @@ async function main(){
 
 	camera = new Camera({
 		'target': drone,
-		'targetDistance': [0, 2, -3, 1],
+		'targetDistance': [0, 1.5, -2.5, 1],
 		'farPlane': 300
 	});
 
@@ -406,6 +423,14 @@ async function main(){
 		'color': [0.0, 0.0, 1.0, 1.0]
 	});
 
+
+		let pl3 = new PointLight({
+			'pos': [-32.83206916038585, 20.55721261313922, -17.550776291900426],
+			'decay': 0.9,
+			'target': 0.1,
+			'color': [1.0, 0.0, 1.0, 1.0]
+		});
+
 	let ambient = new AmbientLight({
 		'color': [0.1, 0.1, 0.1, 0.0],
 	});
@@ -413,7 +438,7 @@ async function main(){
 	gameObjects.push(drone, terrain,skyBox, cottage);
 
 	lights['direct'] = direct;
-	lights['point'].push(pl1, pl2);
+	lights['point'].push(pl1, pl2, pl3);
 	lights['ambient'] = ambient;
 
 	prepareChunks([terrain, cottage]);

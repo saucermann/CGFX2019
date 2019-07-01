@@ -25,6 +25,7 @@ class WorldObject {
     worldMatrix = [];
     worldNotScale = null;
     parent = null;
+    toBeDrawn =true;
 
     // children = [];
     // the intention was to call, for each update, the "onUpdate" function

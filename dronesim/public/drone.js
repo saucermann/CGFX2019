@@ -12,11 +12,11 @@ class Drone extends WorldObject {
     angVel = 0.0;	//Velocity for rotat
 
     // flying dynamic coefficients
-    sAT = 1; //saturation
+    sAT = 2; //saturation
     mAT = 0.1; //minimum
-    aTur = 3.0;
+    aTur = 5.0;
     aTdr = 5.5;
-    sBT = 1;
+    sBT = 2;
     mBT = 0.1;
     bTur = 5.0;
     bTdr = 5.5;
@@ -130,7 +130,8 @@ class Drone extends WorldObject {
         let translationMatrix = utils.MakeTranslateMatrix(this.pos[X],this.pos[Y],this.pos[Z]);
             //rotation of droneRotation around the y axis
         let rotationMatrix = utils.MakeRotateYMatrix(this.angle);
-        this.worldMatrix = utils.applyTransform([translationMatrix, rotationMatrix, utils.MakeScaleMatrix(this.staticScale)]);
+        this.worldNotScale = utils.applyTransform([translationMatrix, rotationMatrix]);
+        this.worldMatrix = utils.applyTransform([this.worldNotScale, utils.MakeScaleMatrix(this.staticScale)]);
         var newPos = [this.pos[X],this.pos[Y],this.pos[Z]];
         var newAngle = this.angle;
         // 3 is hardcoded since velocity, position, acceleration are expressed by 3 coordinates

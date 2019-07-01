@@ -5,6 +5,7 @@
 		<script src="static/lib/quaternion.min.js"></script>
 		<script src="static/lib/webgl-obj-loader.min.js"></script>
 		<script src="static/lib/utils.js"></script>
+		<script src="static/home.js"></script>
 		<script src="static/camera.js"></script>
 		<script src="static/controls.js"></script>
 		<script src="static/light.js"></script>
@@ -15,24 +16,130 @@
 		<script src="static/chunk.js"></script>
 		<script src="static/texture.js"></script>
 		<script src="static/app.js"></script>
+	  <link rel="stylesheet" href="static/home.css"></link>
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 	</head>
 
 	<body style="background-color: grey;" onLoad="main();">
-		<canvas id="drone-sim-canvas" width='800' height='450' style="background-color: white;">
+		<div id= "nav">
+			<div  id="first_line" class="flex" height="40px" width="100%">
+					<div class="flex w10"  onmouseover="toggleOnExclusive('dirLightMenu')">
+					<a id="dirLightMenuHeader" class="nav-item" href="#" role="button" height="30">
+						 Direct light </a>
+				  </div>
+					<div class="flex w10"   onmouseover="toggleOnExclusive('ambLightMenu')">
+					<a id="ambLightMenuHeader" class="nav-item" href="#" role="button" height="30">
+						 Ambient light </a>
+				  </div>
+					<div class="flex w10"   onmouseover="toggleOnExclusive('po1LightMenu')">
+					<a id="po1LightMenuHeader" class="nav-item" href="#" role="button" height="30">
+						 1st Point light </a>
+				  </div>
+					<div class="flex w10"   onmouseover="toggleOnExclusive('po2LightMenu')">
+					<a id="po2LightMenuHeader" class="nav-item" href="#" role="button" height="30">
+						 2nd Point light </a>
+				  </div>
+					<div class="flex w10"   onmouseover="toggleOnExclusive('po3LightMenu')">
+					<a id="po3LightMenuHeader" class="nav-item" href="#" role="button" height="30">
+						 3rd Point light </a>
+				  </div>
+					<div class="flex w10"   onmouseover="toggleOnExclusive('skyboxMenu')">
+					<a id="skyboxMenuHeader" class="nav-item" href="#" role="button" height="30">
+						 Skybox </a>
+				  </div>
+					<div class="flex w10"   onmouseover="toggleOnExclusive('droneMenu')">
+					<a id="droneMenuHeader" class="nav-item" href="#" role="button" height="30">
+						 Drone </a>
+				  </div>
+				</div>
+					<div id="second_line" height="40px" width="100%">
+						<div  id="dirLightMenu"  onmouseover="toggleOnExclusive('dirLightMenu')" aria-labelledby="navbarDropdown" style="display:none" width="150">
+								<a class="nav-item" href="#"> Colour: <input id="dirCol" type="color"value="#FFFFFF" onchange="setColor('dirCol')"> </a>
+								<a class="nav-item" href="#">Direction -->
+									<a class="nav-item" href="#">X coor: <input id="dirX" type=number step=0.01 min="-1" max="1" onchange="setDir('dirX')"/></a>
+									<a class="nav-item" href="#">Y coor: <input id="dirY" type=number step=0.01 min="-1" max="1" onchange="setDir('dirY')"/></a>
+									<a class="nav-item" href="#">Z coor: <input id="dirZ" type=number step=0.01 min="-1" max="1" onchange="setDir('dirZ')" /></a>
+								</a>
+								<a id="switchOnDir" class="nav-item" href="#" onclick="switchElem('Dir')"> switch OFF</a>
+								<a id="switchOffDir" class="nav-item" href="#" onclick="switchElem('Dir')" style="display:none"> switch ON</a>
+						</div>
+						<div id="ambLightMenu"onmouseover="toggleOnExclusive('ambLightMenu')" aria-labelledby="navbarDropdown" style="display:none" width="150">
+								<a class="nav-item" href="#"> Colour: <input id="ambCol" type="color"value="#191919" onchange="setColor('ambCol')"> </a>
+								<a id="switchOnAmb" class="nav-item" href="#" onclick="switchElem('Amb')"> switch OFF</a>
+								<a id="switchOffAmb" class="nav-item" href="#" onclick="switchElem('Amb')" style="display:none"> switch ON</a>
+						</div>
+						<div  id="po1LightMenu"  onmouseover="toggleOnExclusive('po1LightMenu')" aria-labelledby="navbarDropdown" style="display:none" width="150">
+								<a class="nav-item" href="#"> Colour: <input id="po1Col" type="color"value="#FFFFFF" onchange="setColor('po1Col')"> </a>
+								<a class="nav-item" href="#">Position -->
+									<a class="nav-item" href="#">X coor: <input id="po1X" type=number step=0.1 onchange="setCor('po1X')"/></a>
+									<a class="nav-item" href="#">Y coor: <input id="po1Y" type=number step=0.1 onchange="setCor('po1Y')"/></a>
+									<a class="nav-item" href="#">Z coor: <input id="po1Z" type=number step=0.1 onchange="setCor('po1Z')" /></a>
+								</a>
+								<a class="nav-item" href="#">Decay: <input id="po1D" type=number min=0 step=0.1 onchange="setDecay('po1D')"/></a>
+								<a class="nav-item" href="#">Target: <input id="po1T" type=number min=0 step=0.1 onchange="setTarget('po1T')" /></a>
+								<a id="switchOnPo1" class="nav-item" href="#" onclick="switchElem('Po1')"> switch OFF</a>
+								<a id="switchOffPo1" class="nav-item" href="#" onclick="switchElem('Po1')" style="display:none"> switch ON</a>
+						</div>
+						<div  id="po2LightMenu"  onmouseover="toggleOnExclusive('po2LightMenu')" aria-labelledby="navbarDropdown" style="display:none" width="150">
+								<a class="nav-item" href="#"> Colour: <input id="po2Col" type="color"value="#FFFFFF" onchange="setColor('po2Col')"> </a>
+								<a class="nav-item" href="#">Position -->
+									<a class="nav-item" href="#">X coor: <input id="po2X" type=number step=0.1 onchange="setCor('po2X')"/></a>
+									<a class="nav-item" href="#">Y coor: <input id="po2Y" type=number step=0.1 onchange="setCor('po2Y')"/></a>
+									<a class="nav-item" href="#">Z coor: <input id="po2Z" type=number step=0.1 onchange="setCor('po2Z')" /></a>
+								</a>
+								<a class="nav-item" href="#">Decay: <input id="po2D" type=number min=0 step=0.1 onchange="setDecay('po2D')"/></a>
+								<a class="nav-item" href="#">Target: <input id="po2T" type=number min=0 step=0.1 onchange="setTarget('po2T')" /></a>
+								<a id="switchOnPo2" class="nav-item" href="#" onclick="switchElem('Po2')"> switch OFF</a>
+								<a id="switchOffPo2" class="nav-item" href="#" onclick="switchElem('Po2')" style="display:none"> switch ON</a>
+						</div>
+						<div  id="po3LightMenu"  onmouseover="toggleOnExclusive('po3LightMenu')" aria-labelledby="navbarDropdown" style="display:none" width="150">
+								<a class="nav-item" href="#"> Colour: <input id="po2Col" type="color"value="#FFFFFF" onchange="setColor('po2Col')"> </a>
+								<a class="nav-item" href="#">Position -->
+									<a class="nav-item" href="#">X coor: <input id="po2X" type=number step=0.1 onchange="setCor('po2X')"/></a>
+									<a class="nav-item" href="#">Y coor: <input id="po2Y" type=number step=0.1 onchange="setCor('po2Y')"/></a>
+									<a class="nav-item" href="#">Z coor: <input id="po2Z" type=number step=0.1 onchange="setCor('po2Z')" /></a>
+								</a>
+								<a class="nav-item" href="#">Decay: <input id="po3D" type=number min=0 step=0.1 onchange="setDecay('po3D')"/></a>
+								<a class="nav-item" href="#">Target: <input id="po3T" type=number min=0 step=0.1 onchange="setTarget('po3T')" /></a>
+								<a id="switchOnPo3" class="nav-item" href="#" onclick="switchElem('Po3')"> switch OFF</a>
+								<a id="switchOffPo3" class="nav-item" href="#" onclick="switchElem('Po3')" style="display:none"> switch ON</a>
+						</div>
+						<div  id="skyboxMenu"  onmouseover="toggleOnExclusive('skyboxMenu')" aria-labelledby="navbarDropdown" style="display:none" width="150">
+								<a class="nav-item" href="#"> Colour: <input id="skyCol" type="color"value="#7F7FFE" onchange="setColor('skyCol')"> </a>
+
+								<a id="switchOnSky" class="nav-item" href="#" onclick="switchElem('Sky')"> switch sky OFF</a>
+								<a id="switchOffSky" class="nav-item" href="#" onclick="switchElem('Sky')" style="display:none"> switch sky ON</a>
+						</div>
+						<div  id="droneMenu"  onmouseover="toggleOnExclusive('droneMenu')" aria-labelledby="navbarDropdown" style="display:none" width="150">
+								<a class="nav-item" href="#">Position -->
+									<a class="nav-item" href="#">X coor: <input id="droX" type=number step=0.1 onchange="setCor('droX')"/></a>
+									<a class="nav-item" href="#">Y coor: <input id="droY" type=number step=0.1 onchange="setCor('droY')"/></a>
+									<a class="nav-item" href="#">Z coor: <input id="droZ" type=number step=0.1 onchange="setCor('droZ')" /></a>
+								</a>
+								<a id="switchOnCol" class="nav-item" href="#" onclick="switchElem('Col')"> switch collision OFF</a>
+								<a id="switchOffCol" class="nav-item" href="#" onclick="switchElem('Col')" style="display:none"> switch collision ON</a>
+						</div>
+				</div>
+		</div>
+
+		<canvas id="drone-sim-canvas" width='800' height='500' style="background-color: white;">
 			Your browser doesn't support the Canvas Element!
 		</canvas>
 		<center>
-			<h1>Drone Controls</h1>
+			<h2>Drone Controls</h2>
 			<table border="1">
 			  <tr>
-				<td>&nbsp;</td>
-				<td>Forward: <B>Up</B> Arrow</td>
-				<td>&nbsp;</td>
+				<td><B>Upward</B>: W</td>
+				<td><B>Forward</B>: Up Arrow</td>
+				<td><B>Downward</B>: S</td>
 			  </tr>
 			  <tr>
-				<td>Turn left: <B>Left</B> Arrow</td>
-				<td>Reverse: <B>Down</B> Arrow</td>
-				<td>turn right: <B>Right</B> Arrow</td>
+				<td><B>Turn left</B>: Left Arrow</td>
+				<td><B>Backward</B>: Down Arrow</td>
+				<td><B>Turn right</B>: Right Arrow</td>
 			  </tr>
 			<table/>
 		</center>

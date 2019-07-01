@@ -1,6 +1,8 @@
 const FAR = 160;
 
 class SkyBox extends WorldObject {
+
+    
     /**
      * Constructor of SkyBox class.
      * @param {*} obj
