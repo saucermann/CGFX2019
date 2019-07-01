@@ -24,6 +24,7 @@ var droneObj;
 var terrainObj;
 var skyBoxObj;
 var cottageObj;
+var treeObj;
 var earthObj;
 
 //Time variables
@@ -55,6 +56,7 @@ async function loadAssets() {
 		utils.load('./static/assets/objects/terrain.obj').then( text => terrainObj = text),
 		utils.load('./static/assets/objects/skyBox.obj').then( text => skyBoxObj = text),
 		utils.load('./static/assets/objects/cottage_obj.obj').then( text => cottageObj = text),
+		utils.load('./static/assets/objects/tree.obj').then( text => treeObj = text),
 		utils.load('./static/assets/objects/earth.obj').then( text => earthObj = text),
 	]);
 	console.log("Done.")
@@ -389,6 +391,16 @@ async function main(){
 		'scale':1
 	});
 
+	tree = new WorldObject({
+		'mesh': new OBJ.Mesh(treeObj),
+		'pos': [-50, -35, 20],
+		'texture': new Texture('static/assets/textures/branch.png'),
+		'specularColor': [0.3, 0.3, 0.3, 0.0],
+		'specularShine': 0.1,
+		'texFactor': 1,
+		'scale':2
+	});
+
 	camera = new Camera({
 		'target': drone,
 		'targetDistance': [0, 2, -3, 1],
@@ -435,13 +447,13 @@ async function main(){
 		'color': [0.1, 0.1, 0.1, 0.0],
 	});
 
-	gameObjects.push(drone, terrain,skyBox, cottage);
+	gameObjects.push(drone, terrain, skyBox, tree);
 
 	lights['direct'] = direct;
 	lights['point'].push(pl1, pl2, pl3);
 	lights['ambient'] = ambient;
 
-	prepareChunks([terrain, cottage]);
+	prepareChunks([terrain,tree]);
 	initInput();
 	drawScene();
 }
