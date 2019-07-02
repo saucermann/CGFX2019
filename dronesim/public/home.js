@@ -243,6 +243,13 @@ function initInput(){
   document.getElementById("po3Y").value = lights["point"][2].pos[1];
   document.getElementById("po3Z").value = lights["point"][2].pos[2];
 
+  document.getElementById("po1D").value = lights["point"][0].decay;
+  document.getElementById("po1T").value = lights["point"][0].target;
+  document.getElementById("po2D").value = lights["point"][1].decay;
+  document.getElementById("po2T").value = lights["point"][1].target;
+  document.getElementById("po3D").value = lights["point"][2].decay;
+  document.getElementById("po3T").value = lights["point"][2].target;
+
   document.getElementById("droX").value = drone.pos[0];
   document.getElementById("droY").value = drone.pos[1];
   document.getElementById("droZ").value = drone.pos[2];
