@@ -54,7 +54,7 @@ async function loadAssets() {
 		utils.load('./static/shaders/vertex.glsl').then(text => vs = text),
 		utils.load('./static/shaders/fragment.glsl').then(text => fs = text),
 		utils.load('./static/assets/objects/drone_no_prop.obj').then( text => droneObj = text),
-		utils.load('./static/assets/objects/prop1.obj').then( text => dronePropObj = text),
+		utils.load('./static/assets/objects/prop.obj').then( text => dronePropObj = text),
 		utils.load('./static/assets/objects/terrain_scaled.obj').then( text => terrainObj = text),
 		utils.load('./static/assets/objects/skyBox.obj').then( text => skyBoxObj = text),
 		utils.load('./static/assets/objects/cottage_obj.obj').then( text => cottageObj = text),
@@ -355,7 +355,7 @@ async function main(){
 	initializeWebGL();
 
 	drone = new Drone({
-		'pos': [-30.02, -23.68, 4.15],
+		'pos': [-10.70, -23.37, 5.61],
 		'mesh': new OBJ.Mesh(droneObj),
 		'texture': new Texture('static/assets/textures/drone.png'),
 		'collisionOn': true,
@@ -372,14 +372,14 @@ async function main(){
 		'pos': [-200, -80, 600],
 		'rotation': [270, 0, 0],
 		'texFactor': 1,
-		'specularShine': 100,
-		'specularColor': [1, 1, 1, 0.0],
+		'specularShine': 20,
+		'specularColor': [0.1, 0.1, 0.1, 0.0],
 	});
 
 	skyBox = new SkyBox({
 		'mesh': new OBJ.Mesh(skyBoxObj),
 		'ambientColor': [0.0, 0.0, 0.0, 0.0],
-		'emitColor': [0.5, 0.5, 0.996, 1.0],
+		'emitColor': [0.8, 0.91, 0.976, 1.0],
 		'diffuseColor': [0.0, 0.0, 0.0, 0.0],
 		'specularColor': [0.0, 0.0, 0.0, 0.0],
 		'parent': drone
@@ -397,12 +397,10 @@ async function main(){
 
 	tree = new WorldObject({
 		'mesh': new OBJ.Mesh(treeObj),
-		'pos': [-50, -35.5, 2],
+		'pos':  [-60.99694085462639, -34.5, 14.507392475504481],
 		'texture': new Texture('static/assets/textures/branch.png'),
-		'specularColor': [1, 1, 1, 0.0],
-		'specularShine': 0.1,
 		'texFactor': 1,
-		'scale':2
+		'scale': 5
 	});
 
 	camera = new Camera({
@@ -411,10 +409,9 @@ async function main(){
 		'farPlane': 300
 	});
 
- 	world = new WorldObject({
+	sphere = new WorldObject({
 		'pos': [-50, -30, 2],
 		'mesh': new OBJ.Mesh(worldObj),
-		'texture': new Texture('static/assets/textures/world.jpg'),
 		'specularColor': [1.0, 1.0, 1.0, 0.0],
 		'specularShine': 0.8,
 		'emitColor': [0.0, 0.0, 1.0, 0.0]
@@ -468,23 +465,19 @@ async function main(){
 	});
 
 	let ambient = new AmbientLight({
-		'color': [0.1, 0.1, 0.1, 0.0],
+		'color': [0.392, 0.369, 0.306, 1.0],
 		'on':true
 	});
 
-<<<<<<< HEAD
-	gameObjects.push(drone, terrain, skyBox, cottage, tree, world, dronePropR, dronePropL);
-=======
-	gameObjects.push(drone, terrain, skyBox, cottage, tree);
->>>>>>> 2a7aa619fd277866031486f9b16ac08e9c7ebbe8
+	gameObjects.push(drone, terrain, skyBox, cottage, dronePropR, dronePropL);
 
 	lights['direct'] = direct;
 
-	  console.log(pl1.on);
+	console.log(pl1.on);
 	lights['point'].push(pl1, pl2, pl3);
 	lights['ambient'] = ambient;
-	  console.log(lights["point"][0].on);
-	prepareChunks([terrain,tree]);
+	console.log(lights["point"][0].on);
+	prepareChunks([terrain,tree, cottage]);
 	initInput();
 	drawScene();
 }
