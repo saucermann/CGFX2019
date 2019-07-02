@@ -26,6 +26,7 @@ var skyBoxObj;
 var cottageObj;
 var treeObj;
 var earthObj;
+var dronePropObj;
 
 //Time variables
 var lastUpdateTime;
@@ -52,7 +53,8 @@ async function loadAssets() {
 	await Promise.all([
 		utils.load('./static/shaders/vertex.glsl').then(text => vs = text),
 		utils.load('./static/shaders/fragment.glsl').then(text => fs = text),
-		utils.load('./static/assets/objects/drone.obj').then( text => droneObj = text),
+		utils.load('./static/assets/objects/drone_no_prop.obj').then( text => droneObj = text),
+		utils.load('./static/assets/objects/prop1.obj').then( text => dronePropObj = text),
 		utils.load('./static/assets/objects/terrain_scaled.obj').then( text => terrainObj = text),
 		utils.load('./static/assets/objects/skyBox.obj').then( text => skyBoxObj = text),
 		utils.load('./static/assets/objects/cottage_obj.obj').then( text => cottageObj = text),
@@ -272,7 +274,6 @@ function linkMeshAttr(program){
 
 	// Associate uniforms to program
 	program.WVPmatrixUniform = gl.getUniformLocation(program, "pMatrix");
-	//program.NmatrixUniform = gl.getUniformLocation(program, "nMatrix");
 
 	// Texture
 	program.textureUniform = gl.getUniformLocation(program, "u_texture");
@@ -298,8 +299,6 @@ function linkMeshAttr(program){
 
 	// Camera position
 	program.eyePosition = gl.getUniformLocation(program, "u_eye_pos");
-
-
 	return program;
 }
 
@@ -361,7 +360,7 @@ async function main(){
 		'texture': new Texture('static/assets/textures/drone.png'),
 		'collisionOn': true,
 		'specularColor': [0.3, 0.3, 0.3, 0.0],
-		'specularShine': 0.1,
+		'specularShine': 100,
 		'texFactor': 1.0,
 		'diffuseColor': [0.5, 0.0, 0.0, 1.0],
 		'scale': 2,
@@ -408,7 +407,7 @@ async function main(){
 
 	camera = new Camera({
 		'target': drone,
-		'targetDistance': [0, 2, -3, 1],
+		'targetDistance': [0, 1, -2.2, 1],
 		'farPlane': 300
 	});
 
@@ -419,6 +418,22 @@ async function main(){
 		'specularColor': [1.0, 1.0, 1.0, 0.0],
 		'specularShine': 0.8,
 		'emitColor': [0.0, 0.0, 1.0, 0.0]
+	});
+
+	let dronePropMesh = new OBJ.Mesh(dronePropObj);
+
+	let dronePropR = new Propeller({
+		'mesh': dronePropMesh,
+		'parent': drone,
+		'pos': [-0.255, 0, 0],
+		'angVel': -1000,
+	});
+
+	let dronePropL = new Propeller({
+		'mesh': dronePropMesh,
+		'parent': drone,
+		'pos': [0.255, 0, 0],
+		'angVel': 1000,
 	});
 
 	let direct = new DirectionalLight({
@@ -452,7 +467,7 @@ async function main(){
 		'color': [0.1, 0.1, 0.1, 0.0],
 	});
 
-	gameObjects.push(drone, terrain, skyBox, cottage, tree, world);
+	gameObjects.push(drone, terrain, skyBox, cottage, tree, world, dronePropR, dronePropL);
 
 	lights['direct'] = direct;
 	lights['point'].push(pl1, pl2, pl3);

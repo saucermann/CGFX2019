@@ -210,15 +210,24 @@ class Drone extends WorldObject {
   }
 }
 
-class Propeller extends WorldObject{
+class Propeller extends WorldObject {
     angVel = null;
 
     constructor(obj) {
         super(obj);
         this.angVel = obj.angVel ? obj.angVel : 1;
+        this.translationMatrix = utils.MakeTranslateMatrix(...this.pos);
     }
 
-    update(obj) {
-        this.worldMatrix = this.parent.worldMatrix;
+    update() {
+        this.rotation[Y] += this.angVel * deltaT;
+        this.rotation[Y] = this.rotation[Y] % 360;
+        this.rotationMatrix = utils.MakeRotateYMatrix(this.rotation[Y]);
+
+        this.worldMatrix = utils.applyTransform([
+            this.parent.worldMatrix,
+            this.translationMatrix,
+            this.rotationMatrix,
+        ]);
     }
 }
