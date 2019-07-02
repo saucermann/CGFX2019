@@ -145,11 +145,11 @@ function drawObj(obj) {
 	}else{
 		drawBasics(obj);
 
-		// DO CALCULATIONS FOR OBJECT SPACE SHADERS		
+		// DO CALCULATIONS FOR OBJECT SPACE SHADERS
 		let inverseWorldMatrix = utils.invertMatrix(obj.worldMatrix);
 		let inverseWVMatrix = utils.invertMatrix(utils.multiplyMatrices(obj.worldMatrix, camera.viewMatrix));
 		let WVPmatrix = utils.multiplyMatrices(camera.projectionMatrix, obj.worldMatrix);
-		
+
 
 		let sub3InvWorldMatrix = utils.sub3x3from4x4(inverseWorldMatrix);
 		let transformedLightDir = utils.multiplyMatrix3Vector3(sub3InvWorldMatrix, lights.direct.direction);
@@ -175,9 +175,9 @@ function drawObj(obj) {
 		}else{
 			gl.uniform4f(program.ambientLightColor, ...[0,0,0,1]);
 		}
-		
+
 		gl.uniform1i(program.pointLightsLength, lights.point.length);
-		
+
 		for(let i=0; i<lights.point.length; i++) {
 				let lightPos = gl.getUniformLocation(program, "u_point_lights["+i+"].position");
 
@@ -361,9 +361,8 @@ async function main(){
 		'texture': new Texture('static/assets/textures/drone.png'),
 		'collisionOn': true,
 		'specularColor': [0.3, 0.3, 0.3, 0.0],
-		'specularShine': 0.1,
+		'specularShine': 100,
 		'texFactor': 1.0,
-		'diffuseColor': [0.5, 0.0, 0.0, 1.0],
 		'scale': 2,
 		'worldNotScale' : true
 	});
@@ -374,7 +373,8 @@ async function main(){
 		'pos': [-200, -80, 600],
 		'rotation': [270, 0, 0],
 		'texFactor': 1,
-		'worldNotScale' : true
+		'specularShine': 100,
+		'specularColor': [1, 1, 1, 0.0],
 	});
 
 	skyBox = new SkyBox({
@@ -382,7 +382,7 @@ async function main(){
 		'ambientColor': [0.0, 0.0, 0.0, 0.0],
 		'emitColor': [0.5, 0.5, 0.996, 1.0],
 		'diffuseColor': [0.0, 0.0, 0.0, 0.0],
-		'specularColor': [0.1, 0.0, 0.0, 0.0],
+		'specularColor': [0.0, 0.0, 0.0, 0.0],
 		'parent': drone
 	});
 
@@ -390,7 +390,7 @@ async function main(){
 		'mesh': new OBJ.Mesh(cottageObj),
 		'pos': [-50, -35.5, 2],
 		'texture': new Texture('static/assets/textures/cottage_diffuse.png'),
-		'specularColor': [0.3, 0.3, 0.3, 0.0],
+		'specularColor': [1, 1, 1, 0.0],
 		'specularShine': 100,
 		'texFactor': 1,
 		'scale':1
@@ -400,7 +400,7 @@ async function main(){
 		'mesh': new OBJ.Mesh(treeObj),
 		'pos': [-50, -35.5, 2],
 		'texture': new Texture('static/assets/textures/branch.png'),
-		'specularColor': [0.3, 0.3, 0.3, 0.0],
+		'specularColor': [1, 1, 1, 0.0],
 		'specularShine': 0.1,
 		'texFactor': 1,
 		'scale':2
@@ -423,41 +423,48 @@ async function main(){
 
 	let direct = new DirectionalLight({
 		'color': [1.0, 1.0, 1.0, 0.0],
-		'direction' : utils.normalizeVector3([0.60, 0.35, 0.70])
+		'direction' : utils.normalizeVector3([0.60, 0.35, 0.70]),
+		'on':true
 	});
 
 	let pl1 = new PointLight({
-		'pos': [-41.00710808789668, -28.51139764638169, 8.310120951858453],
-		'decay': 0.9,
-		'target': 20,
-		'color': [0.0, 1.0, 0.0, 1.0]
+		'pos': [-20, -25, 8],
+		'decay': 2,
+		'target': 10,
+		'color': [1.0, 1.0, 1.0, 1.0],
+		'on':false
 	});
 
 	let pl2 = new PointLight({
-		'pos': [-52.83206916038585, 20.55721261313922, -17.550776291900426],
-		'decay': 0.9,
-		'target': 0.1,
-		'color': [0.0, 0.0, 1.0, 1.0]
+		'pos': [-50, 20, -20],
+		'decay': 2,
+		'target': 10,
+		'color': [0.0, 0.0, 1.0, 1.0],
+		'on':false
 	});
 
 
 	let pl3 = new PointLight({
-		'pos': [-32.83206916038585, 20.55721261313922, -17.550776291900426],
-		'decay': 0.9,
-		'target': 0.1,
-		'color': [1.0, 0.0, 1.0, 1.0]
+		'pos': [-50, -20, 15],
+		'decay': 2,
+		'target': 10,
+		'color': [1.0, 0.0, 0.0, 1.0],
+		'on':false
 	});
 
 	let ambient = new AmbientLight({
 		'color': [0.1, 0.1, 0.1, 0.0],
+		'on':true
 	});
 
-	gameObjects.push(drone, terrain, skyBox, cottage, tree, world);
+	gameObjects.push(drone, terrain, skyBox, cottage, tree);
 
 	lights['direct'] = direct;
+
+	  console.log(pl1.on);
 	lights['point'].push(pl1, pl2, pl3);
 	lights['ambient'] = ambient;
-
+	  console.log(lights["point"][0].on);
 	prepareChunks([terrain,tree]);
 	initInput();
 	drawScene();

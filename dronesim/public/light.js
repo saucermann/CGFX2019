@@ -7,7 +7,7 @@ class Light {
             throw new TypeError('Abstract class "Light" cannot be instantiated directly.');
         }
         this.color = obj.color ? obj.color : null;
-        this.on = obj.on ? obj.on : true;
+        this.on = obj.on;
     }
 }
 
@@ -40,7 +40,6 @@ class PointLight extends Light {
         this.pos = obj.pos ? obj.pos : null;
         this.decay = obj.decay != null ? obj.decay : 0.1;
         this.target = obj.target != null ? obj.target : 0.1;
-        this.on = obj.on ? obj.on : true;
     }
     setCoor(coor,value){
       this.pos[coor] = value;

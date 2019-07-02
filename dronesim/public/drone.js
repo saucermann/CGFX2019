@@ -127,6 +127,9 @@ class Drone extends WorldObject {
      * Updates drone position and world matrix
      */
     update() {
+        document.getElementById("droX").value = drone.pos[0];
+        document.getElementById("droY").value = drone.pos[1];
+        document.getElementById("droZ").value = drone.pos[2];
         // update world matrix
         //WORLD MATRIX
         //translation of (droneX,droneY,droneZ)

@@ -47,8 +47,8 @@ class WorldObject {
         this.ambientColor = obj.ambientColor ? obj.ambientColor : [0.3, 0.3, 0.3, 1.0];
         this.texture = obj.texture;
         this.hasTexture = obj.texture ? true : false;
-        this.specularColor = obj.specularColor ? obj.specularColor : [0.0, 0.0, 0.0, 0.0];
-        this.specularShine = obj.specularShine != null ? obj.specularShine : 10.0;
+        this.specularColor = obj.specularColor ? obj.specularColor : [0.3, 0.3, 0.3, 0.0];
+        this.specularShine = obj.specularShine != null ? obj.specularShine : 100.0;
         this.texFactor = obj.texFactor ? obj.texFactor : 1.0;
         this.pos = obj.pos ? obj.pos : [0.0, 0.0, 0.0];
         this.rotation = obj.rotation ? obj.rotation : [0.0, 0.0, 0.0];
