@@ -355,7 +355,7 @@ async function main(){
 	initializeWebGL();
 
 	drone = new Drone({
-		'pos': [-10.70, -23.37, 5.61],
+		'pos': [-10.7, -36, 5.61],
 		'mesh': new OBJ.Mesh(droneObj),
 		'texture': new Texture('static/assets/textures/drone.png'),
 		'collisionOn': true,
