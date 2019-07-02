@@ -355,7 +355,7 @@ async function main(){
 	initializeWebGL();
 
 	drone = new Drone({
-		'pos': [-10.7, -36, 5.61],
+		'pos': [-10.7, -32, 5.61],
 		'mesh': new OBJ.Mesh(droneObj),
 		'texture': new Texture('static/assets/textures/drone.png'),
 		'collisionOn': true,
@@ -397,7 +397,7 @@ async function main(){
 
 	tree = new WorldObject({
 		'mesh': new OBJ.Mesh(treeObj),
-		'pos':  [-60.99694085462639, -34.5, 14.507392475504481],
+		'pos':  [-60.99694085462639, -34.5, 12.507392475504481],
 		'texture': new Texture('static/assets/textures/branch.png'),
 		'texFactor': 1,
 		'scale': 5
@@ -469,7 +469,7 @@ async function main(){
 		'on':true
 	});
 
-	gameObjects.push(drone, terrain, skyBox, cottage, dronePropR, dronePropL);
+	gameObjects.push(drone, terrain, skyBox, cottage, tree, dronePropR, dronePropL);
 
 	lights['direct'] = direct;
 
@@ -477,7 +477,7 @@ async function main(){
 	lights['point'].push(pl1, pl2, pl3);
 	lights['ambient'] = ambient;
 	console.log(lights["point"][0].on);
-	prepareChunks([terrain,tree, cottage]);
+	prepareChunks([terrain,tree]);
 	initInput();
 	drawScene();
 }
