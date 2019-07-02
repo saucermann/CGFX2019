@@ -152,7 +152,7 @@ function drawObj(obj) {
 
 		// GET ALL THE UNIFORMS
 		// EYE Position
-		let eyePos = utils.multiplyMatrixVector(inverseWVMatrix, camera.pos.concat(1));
+		let eyePos = utils.multiplyMatrixVector(inverseWorldMatrix, camera.pos.concat(1));
 		gl.uniform3f(program.eyePosition, ...eyePos);
 
 		// Lights and lights and lights
