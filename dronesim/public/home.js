@@ -1,5 +1,7 @@
 var menu = ['dirLightMenu','ambLightMenu','po1LightMenu','po2LightMenu','po3LightMenu','skyboxMenu','droneMenu'];
 
+var switches = ["Dir","Amb","Po1","Po2","Po3","Sky","Col"];
+
 function ehi(){
   alert("ehi");
 }
@@ -78,13 +80,22 @@ function setColor(light){
   }
 }
 
+function setNormDir(){
+  document.getElementById("dirX").value = lights["direct"].direction[0];
+  document.getElementById("dirY").value = lights["direct"].direction[1];
+  document.getElementById("dirZ").value = lights["direct"].direction[2];
+}
+
 function setDir(coor){
   switch(coor){
     case "dirX":  lights["direct"].setCoor(0,getVal(coor));
+                  setNormDir();
                     break;
     case "dirY":  lights["direct"].setCoor(1,getVal(coor));
+                  setNormDir();
                     break;
     case "dirZ":  lights["direct"].setCoor(2,getVal(coor));
+                  setNormDir();
                     break;
     default : break;
   }
@@ -156,7 +167,7 @@ function switchElem(elem){
                     toggleOn("switchOn"+elem);
                   }
                     break;
-    case "Amb":  if(lights["ambient"].on){
+  case "Amb":  if(lights["ambient"].on){
                     lights["ambient"].on = false;
                     toggleOn("switchOff"+elem);
                     toggleOff("switchOn"+elem);
@@ -220,6 +231,11 @@ function switchElem(elem){
   }
 }
 
+function updateInputDrone(){
+  document.getElementById("droX").value = drone.pos[0];
+  document.getElementById("droY").value = drone.pos[1];
+  document.getElementById("droZ").value = drone.pos[2];
+}
 
 function initInput(){
   document.getElementById("dirCol").value = getHex(lights["direct"].color);
@@ -229,9 +245,7 @@ function initInput(){
   document.getElementById("po3Col").value = getHex(lights["point"][2].color);
   document.getElementById("skyCol").value = getHex(skyBox.emitColor);
 
-  document.getElementById("dirX").value = lights["direct"].direction[0];
-  document.getElementById("dirY").value = lights["direct"].direction[1];
-  document.getElementById("dirZ").value = lights["direct"].direction[2];
+  setNormDir();
 
   document.getElementById("po1X").value = lights["point"][0].pos[0];
   document.getElementById("po1Y").value = lights["point"][0].pos[1];
@@ -249,9 +263,11 @@ function initInput(){
   document.getElementById("po2T").value = lights["point"][1].target;
   document.getElementById("po3D").value = lights["point"][2].decay;
   document.getElementById("po3T").value = lights["point"][2].target;
+  updateInputDrone();
 
-  document.getElementById("droX").value = drone.pos[0];
-  document.getElementById("droY").value = drone.pos[1];
-  document.getElementById("droZ").value = drone.pos[2];
+  for(let i=0; i<switches.length; i++){
+    switchElem(switches[i]);
+    switchElem(switches[i]);
+  }
 
 }
