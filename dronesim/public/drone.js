@@ -1,7 +1,6 @@
 class Drone extends WorldObject {
 
     //Drone movement variables
-    pos = null;
     vel = [0, 0, 0];
     prevVel = [0, 0, 0];
     linVel = [0, 0, 0];
@@ -27,8 +26,6 @@ class Drone extends WorldObject {
     //ASur = 1.0;
     //ASdr = 0.5;
 
-    worldMatrix = [];
-
     MinX = 0.0;
     MaxX = 0.0;
     MinY = 0.0;
@@ -43,7 +40,6 @@ class Drone extends WorldObject {
      */
     constructor(obj) {
         super(obj);
-        this.pos = obj.pos ? obj.pos : [0, 10, 0];
         this.worldMatrix = utils.MakeTranslateMatrix(...this.pos);
         this.collisionOn = obj.collisionOn;
         this.setHitBox();
@@ -137,8 +133,8 @@ class Drone extends WorldObject {
         let translationMatrix = utils.MakeTranslateMatrix(this.pos[X],this.pos[Y],this.pos[Z]);
             //rotation of droneRotation around the y axis
         let rotationMatrix = utils.MakeRotateYMatrix(this.angle);
-        this.worldNotScale = utils.applyTransform([translationMatrix, rotationMatrix]);
-        this.worldMatrix = utils.applyTransform([this.worldNotScale, utils.MakeScaleMatrix(this.staticScale)]);
+        this.worldMatrix = utils.applyTransform([translationMatrix, rotationMatrix]);
+        //this.worldMatrix = utils.applyTransform([this.worldNotScale, utils.MakeScaleMatrix(this.staticScale)]);
         var newPos = [this.pos[X],this.pos[Y],this.pos[Z]];
         var newAngle = this.angle;
         // 3 is hardcoded since velocity, position, acceleration are expressed by 3 coordinates

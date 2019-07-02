@@ -53,7 +53,7 @@ async function loadAssets() {
 		utils.load('./static/shaders/vertex.glsl').then(text => vs = text),
 		utils.load('./static/shaders/fragment.glsl').then(text => fs = text),
 		utils.load('./static/assets/objects/drone.obj').then( text => droneObj = text),
-		utils.load('./static/assets/objects/terrain.obj').then( text => terrainObj = text),
+		utils.load('./static/assets/objects/terrain_scaled.obj').then( text => terrainObj = text),
 		utils.load('./static/assets/objects/skyBox.obj').then( text => skyBoxObj = text),
 		utils.load('./static/assets/objects/cottage_obj.obj').then( text => cottageObj = text),
 		utils.load('./static/assets/objects/tree.obj').then( text => treeObj = text),
@@ -145,34 +145,42 @@ function drawObj(obj) {
 	}else{
 		drawBasics(obj);
 
-		// DO CALCULATIONS FOR OBJECT SPACE SHADERS
-		let inverseWorldMatrix = utils.invertMatrix(obj.worldNotScale ? obj.worldNotScale : obj.worldMatrix);
-		let inverseWVMatrix = utils.invertMatrix(utils.multiplyMatrices(obj.worldNotScale ? obj.worldNotScale : obj.worldMatrix, camera.viewMatrix));
+		// DO CALCULATIONS FOR OBJECT SPACE SHADERS		
+		let inverseWorldMatrix = utils.invertMatrix(obj.worldMatrix);
+		let inverseWVMatrix = utils.invertMatrix(utils.multiplyMatrices(obj.worldMatrix, camera.viewMatrix));
 		let WVPmatrix = utils.multiplyMatrices(camera.projectionMatrix, obj.worldMatrix);
+		
+
+		let sub3InvWorldMatrix = utils.sub3x3from4x4(inverseWorldMatrix);
+		let transformedLightDir = utils.multiplyMatrix3Vector3(sub3InvWorldMatrix, lights.direct.direction);
+		transformedLightDir = utils.normalizeVector3(transformedLightDir);
+
 
 		// GET ALL THE UNIFORMS
 		// EYE Position
 		let eyePos = utils.multiplyMatrixVector(inverseWorldMatrix, camera.pos.concat(1));
+
 		gl.uniform3f(program.eyePosition, ...eyePos);
 
-		// Lights and lights and lights
-		let transformedLightDir = utils.multiplyMatrix3Vector3(inverseWorldMatrix, lights.direct.direction);
-
 		gl.uniform3f(program.dirLightDirection, ...transformedLightDir);
+
 		if(lights.direct.on){
 			gl.uniform4f(program.dirLightColor, ...lights.direct.color);
-		}else{
+		} else {
 			gl.uniform4f(program.dirLightColor, ...[0,0,0,1]);
 		}
+
 		if(lights.ambient.on){
 			gl.uniform4f(program.ambientLightColor, ...lights.ambient.color);
 		}else{
 			gl.uniform4f(program.ambientLightColor, ...[0,0,0,1]);
 		}
+		
 		gl.uniform1i(program.pointLightsLength, lights.point.length);
-
+		
 		for(let i=0; i<lights.point.length; i++) {
 				let lightPos = gl.getUniformLocation(program, "u_point_lights["+i+"].position");
+
 				let transformedLightPos = utils.multiplyMatrixVector(inverseWorldMatrix, lights.point[i].pos.concat(1))
 				gl.uniform3f(lightPos, ...transformedLightPos);
 				let lightDecay = gl.getUniformLocation(program, "u_point_lights["+i+"].decay");
@@ -348,7 +356,7 @@ async function main(){
 	initializeWebGL();
 
 	drone = new Drone({
-		'pos': [0, 20, 0],
+		'pos': [-30.02, -23.68, 4.15],
 		'mesh': new OBJ.Mesh(droneObj),
 		'texture': new Texture('static/assets/textures/drone.png'),
 		'collisionOn': true,
@@ -365,9 +373,6 @@ async function main(){
 		'texture': new Texture('static/assets/textures/park.jpg'),
 		'pos': [-200, -80, 600],
 		'rotation': [270, 0, 0],
-		'specularColor': [0.3, 0.3, 0.3, 0.0],
-		'specularShine': 1.0,
-		'scale': 20,
 		'texFactor': 1,
 		'worldNotScale' : true
 	});
@@ -377,7 +382,7 @@ async function main(){
 		'ambientColor': [0.0, 0.0, 0.0, 0.0],
 		'emitColor': [0.5, 0.5, 0.996, 1.0],
 		'diffuseColor': [0.0, 0.0, 0.0, 0.0],
-		'specularColor': [0.0, 0.0, 0.0, 0.0],
+		'specularColor': [0.1, 0.0, 0.0, 0.0],
 		'parent': drone
 	});
 
@@ -386,14 +391,14 @@ async function main(){
 		'pos': [-50, -35.5, 2],
 		'texture': new Texture('static/assets/textures/cottage_diffuse.png'),
 		'specularColor': [0.3, 0.3, 0.3, 0.0],
-		'specularShine': 0.1,
+		'specularShine': 100,
 		'texFactor': 1,
 		'scale':1
 	});
 
 	tree = new WorldObject({
 		'mesh': new OBJ.Mesh(treeObj),
-		'pos': [-50, -35, 20],
+		'pos': [-50, -35.5, 2],
 		'texture': new Texture('static/assets/textures/branch.png'),
 		'specularColor': [0.3, 0.3, 0.3, 0.0],
 		'specularShine': 0.1,
@@ -407,7 +412,7 @@ async function main(){
 		'farPlane': 300
 	});
 
- world = new WorldObject({
+ 	world = new WorldObject({
 		'pos': [-50, -30, 2],
 		'mesh': new OBJ.Mesh(worldObj),
 		'texture': new Texture('static/assets/textures/world.jpg'),
@@ -422,7 +427,7 @@ async function main(){
 	});
 
 	let pl1 = new PointLight({
-		'pos': [0, 20, 0],
+		'pos': [-41.00710808789668, -28.51139764638169, 8.310120951858453],
 		'decay': 0.9,
 		'target': 20,
 		'color': [0.0, 1.0, 0.0, 1.0]
@@ -436,18 +441,18 @@ async function main(){
 	});
 
 
-		let pl3 = new PointLight({
-			'pos': [-32.83206916038585, 20.55721261313922, -17.550776291900426],
-			'decay': 0.9,
-			'target': 0.1,
-			'color': [1.0, 0.0, 1.0, 1.0]
-		});
+	let pl3 = new PointLight({
+		'pos': [-32.83206916038585, 20.55721261313922, -17.550776291900426],
+		'decay': 0.9,
+		'target': 0.1,
+		'color': [1.0, 0.0, 1.0, 1.0]
+	});
 
 	let ambient = new AmbientLight({
 		'color': [0.1, 0.1, 0.1, 0.0],
 	});
 
-	gameObjects.push(drone, terrain, skyBox, tree, world);
+	gameObjects.push(drone, terrain, skyBox, cottage, tree, world);
 
 	lights['direct'] = direct;
 	lights['point'].push(pl1, pl2, pl3);
