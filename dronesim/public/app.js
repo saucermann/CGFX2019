@@ -57,7 +57,7 @@ async function loadAssets() {
 		utils.load('./static/assets/objects/skyBox.obj').then( text => skyBoxObj = text),
 		utils.load('./static/assets/objects/cottage_obj.obj').then( text => cottageObj = text),
 		utils.load('./static/assets/objects/tree.obj').then( text => treeObj = text),
-		utils.load('./static/assets/objects/earth.obj').then( text => earthObj = text),
+		utils.load('./static/assets/objects/world.obj').then( text => worldObj = text),
 	]);
 	console.log("Done.")
 }
@@ -407,14 +407,14 @@ async function main(){
 		'farPlane': 300
 	});
 
-	/*let earth = new WorldObject({
+ world = new WorldObject({
 		'pos': [-50, -30, 2],
-		'mesh': new OBJ.Mesh(earthObj),
-		'diffuseColor': [1.0, 0.0, 1.0, 0.0],
+		'mesh': new OBJ.Mesh(worldObj),
+		'texture': new Texture('static/assets/textures/world.jpg'),
 		'specularColor': [1.0, 1.0, 1.0, 0.0],
 		'specularShine': 0.8,
 		'emitColor': [0.0, 0.0, 1.0, 0.0]
-	})*/
+	});
 
 	let direct = new DirectionalLight({
 		'color': [1.0, 1.0, 1.0, 0.0],
@@ -447,7 +447,7 @@ async function main(){
 		'color': [0.1, 0.1, 0.1, 0.0],
 	});
 
-	gameObjects.push(drone, terrain, skyBox, tree);
+	gameObjects.push(drone, terrain, skyBox, tree, world);
 
 	lights['direct'] = direct;
 	lights['point'].push(pl1, pl2, pl3);
